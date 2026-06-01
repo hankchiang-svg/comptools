@@ -18,6 +18,10 @@ const SECRET_KEY = "HANKHANKCOMPTOOL";
 const STORAGE_KEY = "comp_tool_uuid_v2";
  
 function showLockScreen() {
+if (!document.body) {
+        setTimeout(showLockScreen, 50);
+        return;
+    }
     // 先藏住主體
     document.body.style.visibility = 'hidden';
  
@@ -66,7 +70,12 @@ function showLockScreen() {
         const msg = document.getElementById('auth-msg');
         const val = (input.value||'').trim();
         if (!val || val.length !== 6) { msg.textContent = '⚠️ 請輸入 6 位數密碼'; return; }
+		
+}
         try {
+		if (typeof otplib === 'undefined') {
+    msg.textContent = '⚠️ 驗證套件尚未載入，請確認網路或不要用 file:// 開啟';
+    return;
             const isValid = otplib.totp.check(val, SECRET_KEY);
             if (isValid) {
                 // 產生隨機 UUID 存入此裝置 localStorage
@@ -83,16 +92,18 @@ function showLockScreen() {
 }
  
 function checkAuthorization() {
-    if (typeof otplib === 'undefined') { setTimeout(checkAuthorization, 100); return; }
     const stored = localStorage.getItem(STORAGE_KEY);
-    // 只要 localStorage 有值就放行，沒有就鎖
+
+    // 已授權才放行
     if (stored) return;
+
+    // 沒授權，不管 otplib 有沒有載入，都先顯示鎖畫面
     showLockScreen();
 }
  
-
-
-checkAuthorization();
+ window.addEventListener('DOMContentLoaded', function () {
+  checkAuthorization();
+});
 </script>
  <style>
 :root {
