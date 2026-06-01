@@ -68,26 +68,49 @@ if (!document.body) {
     window._verifyOTP = function() {
         const input = document.getElementById('otp-input');
         const msg = document.getElementById('auth-msg');
-        const val = (input.value||'').trim();
-        if (!val || val.length !== 6) { msg.textContent = '⚠️ 請輸入 6 位數密碼'; return; }
-		
-}
+        const val = (input.value || '').trim();
+
+        if (!val || val.length !== 6) {
+            msg.textContent = '⚠️ 請輸入 6 位數密碼';
+            return;
+        }
+
         try {
-		if (typeof otplib === 'undefined') {
-    msg.textContent = '⚠️ 驗證套件尚未載入，請確認網路或不要用 file:// 開啟';
-    return;
+            if (typeof otplib === 'undefined') {
+                msg.textContent = '⚠️ 驗證套件尚未載入，請確認網路或不要用 file:// 開啟';
+                return;
+            }
+
             const isValid = otplib.totp.check(val, SECRET_KEY);
+
             if (isValid) {
                 // 產生隨機 UUID 存入此裝置 localStorage
-                const uuid = crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(36)+Date.now().toString(36));
+                const uuid = crypto.randomUUID
+                    ? crypto.randomUUID()
+                    : (Math.random().toString(36) + Date.now().toString(36));
+
                 localStorage.setItem(STORAGE_KEY, uuid);
-                overlay.innerHTML = `<div style="text-align:center;"><div style="font-size:64px;margin-bottom:16px;">✅</div><h2 style="color:#34c759;font-size:20px;margin-bottom:8px;">驗證成功！</h2><p style="color:#888;font-size:14px;">此裝置已授權，下次開啟不需再輸入密碼。</p></div>`;
-                setTimeout(() => { overlay.remove(); }, 1200);
+
+                overlay.innerHTML = `
+                    <div style="text-align:center;">
+                        <div style="font-size:64px;margin-bottom:16px;">✅</div>
+                        <h2 style="color:#34c759;font-size:20px;margin-bottom:8px;">驗證成功！</h2>
+                        <p style="color:#888;font-size:14px;">此裝置已授權，下次開啟不需再輸入密碼。</p>
+                    </div>
+                `;
+
+                setTimeout(() => {
+                    overlay.remove();
+                }, 1200);
             } else {
                 msg.textContent = '❌ 驗證碼錯誤或已過期，請重新輸入';
-                input.value = ''; input.focus();
+                input.value = '';
+                input.focus();
             }
-        } catch(e) { msg.textContent = '⚠️ 驗證出錯，請重試'; }
+        } catch (e) {
+            msg.textContent = '⚠️ 驗證出錯，請重試';
+            console.error(e);
+        }
     };
 }
  
