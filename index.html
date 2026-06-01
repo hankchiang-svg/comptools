@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>現場工程計算工具｜全客製完美版</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/otplib/12.0.1/otplib-browser.js"></script>
+
+<script>
+// ════════════════════════════════════════════════════
+//  裝置指紋鎖 + TOTP 驗證系統
+//  邏輯：每台新裝置首次必須輸入 Authenticator 密碼
+//        驗證成功後，產生裝置指紋存入 localStorage
+//        同一裝置下次開啟自動通過，不需再輸入
+//        別人拿到 URL 或 HTML 檔案，在新裝置上需重新向你要密碼
+// ════════════════════════════════════════════════════
+
+const SECRET_KEY = "HANKHANKCOMPTOOL";
+const DEVICE_STORAGE_KEY = "hank_tool_device_auth";
+
+// 產生裝置指紋（瀏覽器特徵組合）
+async function generateDeviceFingerprint() {
+    const nav = window.navigator;
+    const screen = window.screen;
+    const raw = [
+        nav.userAgent,
+        nav.language,
+        nav.hardwareConcurrency || '',
+        screen.colorDepth,
+        screen.width + 'x' + screen.height,
+        Intl.DateTimeFormat().resolvedOptions().timeZone,
+        nav.platform || ''
+    ].join('|');
+
+    // 用 SHA-256 產生指紋雜湊
+    const encoder = new TextEncoder();
+    const data = encoder.encode(raw);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 32);
+}
+
+// 顯示驗證畫面（覆蓋整個頁面）
+function showLockScreen(onSuccess) {
+    const overlay = document.createElement('div');
+    overlay.id = 'auth-overlay';
+    overlay.style.cssText = `
+        position: fixed; inset: 0; z-index: 99999;
+        background: #0a0a0a;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        padding: 20px;
+    `;
+    overlay.innerHTML = `
+        <div style="
+            width: 100%; max-width: 360px;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            padding: 32px 24px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        ">
+            <div style="font-size: 40px; margin-bottom: 16px;">🔐</div>
+            <h2 style="color: #ffffff; font-size: 18px; margin-bottom: 8px; font-weight: 600;">
+                Hank 的專屬工具
+            </h2>
+            <p style="color: #888; font-size: 13px; margin-bottom: 24px; line-height: 1.6;">
+                此裝置尚未授權。<br>
+                請輸入 Hank 手機 Authenticator<br>
+                當前的 <strong style="color:#4daafc">6 位數動態密碼</strong>
+            </p>
+            <input
+                id="otp-input"
+                type="number"
+                inputmode="numeric"
+                maxlength="6"
+                placeholder="000000"
+                style="
+                    width: 100%;
+                    padding: 14px;
+                    font-size: 24px;
+                    text-align: center;
+                    letter-spacing: 8px;
+                    background: #0a0a0a;
+                    border: 1px solid #333;
+                    border-radius: 10px;
+                    color: #fff;
+                    outline: none;
+                    margin-bottom: 16px;
+                "
+                oninput="this.value = this.value.slice(0,6)"
+            />
+            <button
+                onclick="window._verifyOTP()"
+                style="
+                    width: 100%;
+                    padding: 14px;
+                    background: #007aff;
+                    color: #fff;
+                    border: none;
+                    border-radius: 10px;
+                    font-size: 16px;
+                    font-weight: 600;
+                    cursor: pointer;
+                "
+            >驗證並解鎖此裝置</button>
+            <p id="auth-msg" style="color: #ff3b30; font-size: 13px; margin-top: 12px; min-height: 20px;"></p>
+            <p style="color: #444; font-size: 11px; margin-top: 16px; line-height: 1.5;">
+                驗證成功後，此裝置將自動記憶授權。<br>
+                其他裝置需重新向 Hank 取得密碼。
+            </p>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // Enter 鍵觸發驗證
+    document.getElementById('otp-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') window._verifyOTP();
+    });
+
+    // 自動 focus
+    setTimeout(() => {
+        const input = document.getElementById('otp-input');
+        if (input) input.focus();
+    }, 100);
+
+    window._verifyOTP = async function() {
+        const input = document.getElementById('otp-input');
+        const msg = document.getElementById('auth-msg');
+        const userInput = (input.value || '').trim();
+
+        if (!userInput || userInput.length !== 6) {
+            msg.textContent = '⚠️ 請輸入 6 位數密碼';
+            return;
+        }
+
+        try {
+            const isValid = otplib.totp.check(userInput, SECRET_KEY);
+            if (isValid) {
+                // 驗證成功：產生裝置指紋並儲存
+                const fingerprint = await generateDeviceFingerprint();
+                const authData = {
+                    fingerprint: fingerprint,
+                    authorizedAt: Date.now(),
+                    userAgent: navigator.userAgent.substring(0, 50)
+                };
+                localStorage.setItem(DEVICE_STORAGE_KEY, JSON.stringify(authData));
+
+                // 顯示成功動畫
+                const overlay = document.getElementById('auth-overlay');
+                overlay.innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="font-size: 64px; margin-bottom: 16px;">✅</div>
+                        <h2 style="color: #34c759; font-size: 20px; margin-bottom: 8px;">驗證成功！</h2>
+                        <p style="color: #888; font-size: 14px;">此裝置已授權，下次開啟不需再輸入密碼。</p>
+                    </div>
+                `;
+                setTimeout(() => {
+                    overlay.remove();
+                    onSuccess();
+                }, 1200);
+            } else {
+                msg.textContent = '❌ 驗證碼錯誤或已過期，請重新輸入';
+                input.value = '';
+                input.focus();
+            }
+        } catch (e) {
+            msg.textContent = '⚠️ 驗證出錯，請重試';
+        }
+    };
+}
+
+// 主驗證流程
+async function checkAuthorization() {
+    // 等 otplib 載入
+    if (typeof otplib === 'undefined') {
+        setTimeout(checkAuthorization, 100);
+        return;
+    }
+
+    // 先隱藏主內容，避免未授權時被看到
+    document.body.style.visibility = 'hidden';
+
+    try {
+        const stored = localStorage.getItem(DEVICE_STORAGE_KEY);
+        if (stored) {
+            const authData = JSON.parse(stored);
+            const currentFingerprint = await generateDeviceFingerprint();
+
+            if (authData.fingerprint === currentFingerprint) {
+                // 指紋吻合，此裝置已授權 ✅
+                document.body.style.visibility = 'visible';
+                return;
+            }
+        }
+    } catch (e) {
+        // localStorage 讀取失敗，進入驗證流程
+    }
+
+    // 未授權裝置：顯示 Lock Screen
+    document.body.style.visibility = 'visible';
+    showLockScreen(() => {
+        // 解鎖成功後，什麼都不用做，頁面已顯示
+    });
+}
+
+// DOM 載入後執行
+document.addEventListener('DOMContentLoaded', checkAuthorization);
+</script>
+
+<style>
+:root {
+--bg-color: #121212;
+--card-bg: #1e1e1e;
+--accent-blue: #007aff;
+--accent-green: #34c759;
+--accent-orange: #ff9500;
+--accent-cyan: #4daafc;
+--accent-red: #ff3b30;
+--text-main: #aaaaaa;
+--text-highlight: #ffffff;
+--border-color: #333333;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif; }
+body { background-color: var(--bg-color); color: var(--text-main); padding: 10px; font-size: 15px; }
+.app-container { max-width: 520px; margin: 0 auto; }
+
+.header { text-align: center; margin: 8px 0 16px; padding: 12px 8px; border: 1px solid var(--border-color); border-radius: 12px; background-color: var(--card-bg); }
+.header h1 { color: var(--text-highlight); font-size: 20px; letter-spacing: 1px; margin-bottom: 4px; }
+.header p { font-size: 12px; color: var(--accent-cyan); }
+
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background-color: var(--card-bg); border-radius: 10px; padding: 6px; margin-bottom: 15px; border: 1px solid var(--border-color); position: sticky; top: 8px; z-index: 10; }
+.tab-btn { padding: 10px 3px; text-align: center; background: none; border: none; color: var(--text-main); font-size: 12px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+.tab-btn.active { background-color: var(--accent-blue); color: var(--text-highlight); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.section-card { background-color: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border-color); box-shadow: 0 4px 8px rgba(0,0,0,0.12); }
+.section-title { font-size: 15px; font-weight: bold; color: var(--text-highlight); margin-bottom: 15px; display: flex; align-items: center; }
+.section-title::before { content: ""; display: inline-block; width: 4px; height: 15px; background-color: var(--accent-blue); margin-right: 8px; border-radius: 2px; }
+
+.section-title.green { color: var(--accent-green); }
+.section-title.green::before { background-color: var(--accent-green); }
+.section-title.orange { color: var(--accent-orange); }
+.section-title.orange::before { background-color: var(--accent-orange); }
+.section-title.cyan { color: var(--accent-cyan); }
+.section-title.cyan::before { background-color: var(--accent-cyan); }
+
+.form-group { margin-bottom: 12px; }
+label { display: block; font-size: 13px; margin-bottom: 5px; color: var(--text-main); }
+.input-wrapper { position: relative; display: flex; align-items: center; }
+input { width: 100%; padding: 12px 42px 12px 12px; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-highlight); font-size: 16px; outline: none; }
+input:focus { border-color: var(--accent-blue); }
+.unit { position: absolute; right: 10px; font-size: 12px; color: #777777; pointer-events: none; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.result-box { background-color: rgba(255,255,255,0.025); border: 1px dashed var(--border-color); border-radius: 8px; padding: 12px; margin-top: 15px; }
+.result-box.blue { border-color: var(--accent-blue); background-color: rgba(0,122,255,0.08); }
+.result-box.green { border-color: var(--accent-green); background-color: rgba(52,199,89,0.08); }
+.result-box.orange { border-color: var(--accent-orange); background-color: rgba(255,149,0,0.08); }
+.result-box.cyan { border-color: var(--accent-cyan); background-color: rgba(77,170,252,0.08); }
+
+.result-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 14px; }
+.result-row:last-child { margin-bottom: 0; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.06); }
+.result-val { font-weight: bold; color: var(--text-highlight); font-size: 16px; text-align: right; }
+.highlight { font-size: 18px; }
+.green-text { color: var(--accent-green); }
+.orange-text { color: var(--accent-orange); }
+.cyan-text { color: var(--accent-cyan); }
+.red-text { color: var(--accent-red); }
+</style>
+</head>
+
+<body>
+<div class="app-container">
+<div class="header">
+<h1>現場工程計算工具</h1>
+</div>
+
+<div class="tabs">
+<button class="tab-btn active" onclick="switchTab(0)">基礎量測公式</button>
+<button class="tab-btn" onclick="switchTab(1)">冰水系統公式</button>
+<button class="tab-btn" onclick="switchTab(2)">進階公式</button>
+</div>
+
+<div id="tab0" class="tab-content active">
+<div class="section-card">
+<div class="section-title">管道與流速參數</div>
+<div class="form-group"><label>最大流速（對應 20mA）</label><div class="input-wrapper"><input type="number" id="maxVelocity" value="" inputmode="decimal" step="any" oninput="calcFlow()"><span class="unit">m/s</span></div></div>
+
+<div class="form-group">
+<label>管週長 / 外徑規格</label>
+<div class="input-wrapper" style="margin-bottom: 8px;">
+<input type="number" id="pipeCircumference" value="" inputmode="decimal" step="any" oninput="syncCircumference('mm')"><span class="unit">mm</span>
+</div>
+<div class="input-wrapper">
+<input type="number" id="pipeInch" value="4.51" inputmode="decimal" step="any" oninput="syncCircumference('inch')"><span class="unit">吋 (inch)</span>
+</div>
+</div>
+
+<div class="form-group"><label>管壁厚度</label><div class="input-wrapper"><input type="number" id="wallThickness" value="" inputmode="decimal" step="any" oninput="calcFlow()"><span class="unit">mm</span></div></div>
+
+<div class="result-box blue">
+<div class="result-row"><span>管路直徑（ID）：</span><span class="result-val" id="resID">0.0 mm</span></div>
+<div class="result-row"><span>截面積：</span><span class="result-val" id="resArea">0.0000 m²</span></div>
+<div class="result-row"><span>估算最大流量：</span><span class="result-val highlight green-text" id="resFlow">0.00 CMM</span></div>
+</div>
+</div>
+
+<div class="section-card">
+<div class="section-title orange">空壓效能與比功率</div>
+<div class="form-group"><label>輸入電壓</label><div class="input-wrapper"><input type="number" id="vAir" value="" inputmode="decimal" oninput="calcAir()"><span class="unit">V</span></div></div>
+<div class="form-group"><label>輸入電流</label><div class="input-wrapper"><input type="number" id="iAir" value="" inputmode="decimal" oninput="calcAir()"><span class="unit">A</span></div></div>
+<div class="form-group"><label>功率因數（PF）</label><div class="input-wrapper"><input type="number" id="pfAir" value="" inputmode="decimal" step="any" max="1" oninput="calcAir()"><span class="unit">cosφ</span></div></div>
+<div class="form-group"><label>流量（Flow）</label><div class="input-wrapper"><input type="number" id="airFlow" value="" inputmode="decimal" step="any" oninput="calcAir()"><span class="unit">m³/min</span></div></div>
+<div class="result-box orange">
+<div class="result-row"><span>空壓機電功率：</span><span class="result-val" id="resAirKW">0.00 kW</span></div>
+<div class="result-row"><span>對應馬力估算：</span><span class="result-val" id="resAirHP">0.00 HP</span></div>
+<div class="result-row"><span>空壓機率能（比功率）：</span><span class="result-val highlight orange-text" id="resAirEff">0.000 kW/CMM</span></div>
+</div>
+</div>
+
+<div class="section-card">
+<div class="section-title green">泵浦相似定律變頻計算</div>
+<div class="grid-2">
+<div class="form-group"><label>原始頻率 (f1)</label><div class="input-wrapper"><input type="number" id="pumpF1" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">Hz</span></div></div>
+<div class="form-group"><label>目標頻率 (f2)</label><div class="input-wrapper"><input type="number" id="pumpF2" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">Hz</span></div></div>
+</div>
+<div class="form-group"><label>原始流量 (Q1)</label><div class="input-wrapper"><input type="number" id="pumpQ1" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">LPM</span></div></div>
+<div class="form-group"><label>原始揚程 (H1)</label><div class="input-wrapper"><input type="number" id="pumpH1" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">m</span></div></div>
+<div class="form-group"><label>原始軸功率 (P1)</label><div class="input-wrapper"><input type="number" id="pumpP1" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">kW</span></div></div>
+<div class="result-box green">
+<div class="result-row"><span>目標流量 (Q2)：</span><span class="result-val highlight green-text" id="resPumpQ2">0.00 LPM</span></div>
+<div class="result-row"><span>目標揚程 (H2)：</span><span class="result-val highlight cyan-text" id="resPumpH2">0.00 m</span></div>
+<div class="result-row"><span>目標功率 (P2)：</span><span class="result-val highlight orange-text" id="resPumpP2">0.00 kW</span></div>
+</div>
+</div>
+</div>
+
+<div id="tab1" class="tab-content">
+<div class="section-card">
+<div class="section-title cyan">1. 冰水側輸入</div>
+<div class="grid-2">
+<div class="form-group"><label>回水溫度(高)</label><div class="input-wrapper"><input type="number" id="tempIn" value="" inputmode="decimal" step="any" oninput="calculateChillerAll()"><span class="unit">°C</span></div></div>
+<div class="form-group"><label>出水溫度(低)</label><div class="input-wrapper"><input type="number" id="tempOut" value="" inputmode="decimal" step="any" oninput="calculateChillerAll()"><span class="unit">°C</span></div></div>
+</div>
+<div class="form-group"><label>冰水流量(LPM)</label><div class="input-wrapper"><input type="number" id="flowRate" value="" inputmode="decimal" step="any" oninput="syncCHFlow('lpm')"><span class="unit">LPM</span></div></div>
+<div class="form-group"><label>冰水流量 (噸)</label><div class="input-wrapper"><input type="number" id="flowRateCMH" value="" inputmode="decimal" step="any" oninput="syncCHFlow('cmh')"><span class="unit">m³/h</span></div></div>
+</div>
+
+<div class="section-card">
+<div class="section-title cyan" style="color: #00bfff; border-left-color: #00bfff;">2. 冷卻水側輸入</div>
+<div class="grid-2">
+<div class="form-group"><label>回水溫度(高)</label><div class="input-wrapper"><input type="number" id="cwTempIn" value="" inputmode="decimal" step="any" oninput="calculateChillerAll()"><span class="unit">°C</span></div></div>
+<div class="form-group"><label>出水溫度(低)</label><div class="input-wrapper"><input type="number" id="cwTempOut" value="" inputmode="decimal" step="any" oninput="calculateChillerAll()"><span class="unit">°C</span></div></div>
+</div>
+<div class="form-group"><label>冷卻水流量(LPM)</label><div class="input-wrapper"><input type="number" id="cwFlowRate" value="" inputmode="decimal" step="any" oninput="syncCWFlow('lpm')"><span class="unit">LPM</span></div></div>
+<div class="form-group"><label>冷卻水流量 (噸)</label><div class="input-wrapper"><input type="number" id="cwFlowRateCMH" value="" inputmode="decimal" step="any" oninput="syncCWFlow('cmh')"><span class="unit">m³/h</span></div></div>
+</div>
+
+<div class="section-card">
+<div class="section-title orange">3. 冰機系統電力輸入</div>
+<div class="grid-2">
+<div class="form-group"><label>電壓</label><div class="input-wrapper"><input type="number" id="voltage" value="" inputmode="decimal" oninput="syncPower('vi')"><span class="unit">V</span></div></div>
+<div class="form-group"><label>電流</label><div class="input-wrapper"><input type="number" id="current" value="" inputmode="decimal" oninput="syncPower('vi')"><span class="unit">A</span></div></div>
+</div>
+<div class="form-group"><label>功率因數 (PF)</label><div class="input-wrapper"><input type="number" id="pf" value="" inputmode="decimal" step="any" max="1" oninput="syncPower('vi')"><span class="unit">--</span></div></div>
+<div class="form-group"><label>實測電功率</label><div class="input-wrapper"><input type="number" id="inputKW" value="" inputmode="decimal" step="any" oninput="syncPower('kw')"><span class="unit">kW</span></div></div>
+</div>
+
+<div class="section-card" style="border-color: var(--accent-cyan);">
+<div class="section-title cyan">📋 溫差與單位能耗即時顯示</div>
+<div class="result-box cyan">
+<div class="result-row"><span>冰水溫差 (ΔT)：</span><span class="result-val cyan-text" id="chDeltaT">0.00 °C</span></div>
+<div class="result-row"><span>冰水單位能耗：</span><span class="result-val cyan-text" id="chKwRtResult">0.000 kW/RT</span></div>
+<div class="result-row"><span>冷卻水溫差 (ΔT)：</span><span class="result-val orange-text" id="cwDeltaT">0.00 °C</span></div>
+</div>
+</div>
+
+<div class="section-card" style="border-color: var(--accent-orange);">
+<div class="result-box orange">
+<div class="section-title" style="font-size: 13px; margin-bottom: 8px;">實測主機電功率</div>
+<div class="result-row"><span>主機電功率 (kW)：</span><span class="result-val" id="f1_kw">0.00 kW</span></div>
+<div class="section-title green" style="font-size: 13px; margin-top: 12px; margin-bottom: 8px;">主機能效指標 (RT/COP/ (kW/RT))</div>
+<div class="result-row"><span>主機製冷能力：</span><span class="result-val green-text highlight" id="f2_chRT">0.00 RT</span></div>
+<div class="result-row"><span>性能係數 (COP)：</span><span class="result-val green-text highlight" id="f6_cop">0.00</span></div>
+<div class="result-row"><span>每冷凍噸能耗 (kW/RT)：</span><span class="result-val green-text highlight" id="f6_kwrt">0.000 kW/RT</span></div>
+</div>
+</div>
+
+<div class="section-card" style="border-color: var(--accent-green);">
+<div class="section-title green">📋 熱平衡分析與誤差率</div>
+<div class="result-box green" id="hbBox">
+<div class="result-row"><span>冰水側製冷量：</span><span class="result-val" id="f2_kcal">0 kcal/h</span></div>
+<div class="result-row"><span>冷卻水側散熱量：</span><span class="result-val" id="f3_cwKcal">0 kcal/h</span></div>
+<div class="result-row"><span>散熱 VS 吸熱比：</span><span class="result-val" id="f4_ratio">0.00</span></div>
+<div class="result-row"><span>熱平衡實測誤差率：</span><span class="result-val highlight green-text" id="f5_hbErr">0.00 %</span></div>
+</div>
+</div>
+</div>
+
+<div id="tab2" class="tab-content">
+<div class="section-card">
+<div class="section-title blue">現場流量交叉比對驗證</div>
+
+<div class="grid-2">
+<div class="form-group"><label>量測溫差 (ΔT)</label><div class="input-wrapper"><input type="number" id="dtPump" value="" inputmode="decimal" step="any" oninput="calcAdvCross()"><span class="unit">°C</span></div></div>
+<div class="form-group"><label>現場已知噸數</label><div class="input-wrapper"><input type="number" id="knownRT" value="" inputmode="decimal" step="any" oninput="syncAdvTonnage('rt')"><span class="unit">RT</span></div></div>
+</div>
+
+<div class="form-group"><label>現場已知製冷能力功率</label><div class="input-wrapper"><input type="number" id="knownKW" value="" inputmode="decimal" step="any" oninput="syncAdvTonnage('kw')"><span class="unit">kW</span></div></div>
+
+<hr style="border: none; border-top: 1px dashed var(--border-color); margin: 15px 0;">
+
+<div class="grid-2">
+<div class="form-group"><label>馬達電壓 (V)</label><div class="input-wrapper"><input type="number" id="vPump" value="" inputmode="decimal" oninput="calcAdvCross()"><span class="unit">V</span></div></div>
+<div class="form-group"><label>馬達電流 (I)</label><div class="input-wrapper"><input type="number" id="iPump" value="" inputmode="decimal" oninput="calcAdvCross()"><span class="unit">A</span></div></div>
+</div>
+<div class="form-group"><label>馬達功因 (PF)</label><div class="input-wrapper"><input type="number" id="pfPump" value="" inputmode="decimal" step="any" oninput="calcAdvCross()"><span class="unit">--</span></div></div>
+
+<div class="grid-2">
+<div class="form-group"><label>馬達效率 (ηm)</label><div class="input-wrapper"><input type="number" id="effPump" value="" inputmode="decimal" step="any" oninput="calcAdvCross()"><span class="unit">--</span></div></div>
+<div class="form-group"><label>水泵效率 (ηp)</label><div class="input-wrapper"><input type="number" id="effPumpBody" value="" inputmode="decimal" step="any" oninput="calcAdvCross()"><span class="unit">--</span></div></div>
+</div>
+
+<div class="result-box blue">
+<div class="section-title" style="font-size: 13px; margin-bottom: 8px; color: var(--accent-cyan);">📊 流量多維度比對結果</div>
+<div class="result-row"><span>1. 依冷凍噸 (RT) 反推：</span><span class="result-val cyan-text" id="resLpmByRT">0.0 LPM</span></div>
+<div class="result-row"><span>2. 依換製冷能力功率 (kW) 反推：</span><span class="result-val green-text" id="resLpmByKW">0.0 LPM</span></div>
+<div class="result-row"><span>3. 馬達實測總電功率：</span><span class="result-val orange-text" id="resPumpKw">0.00 kW</span></div>
+<div class="result-row"><span>4. 依馬達損失熱反推：</span><span class="result-val" id="resLpmByMotor">0.0 LPM</span></div>
+</div>
+</div>
+
+<div class="section-card">
+<div class="section-title cyan">管內徑流速流量換算</div>
+<div class="form-group">
+<label>管內徑 (ID)</label>
+<div class="input-wrapper" style="margin-bottom: 8px;">
+<input type="number" id="pipeID_mm" value="" inputmode="decimal" step="any" oninput="syncPipeID('mm')"><span class="unit">mm</span>
+</div>
+<div class="input-wrapper">
+<input type="number" id="pipeID_inch" value="" inputmode="decimal" step="any" oninput="syncPipeID('inch')"><span class="unit">吋 (inch)</span>
+</div>
+</div>
+
+<div class="form-group">
+<label>水流量 (Flow)</label>
+<div class="input-wrapper" style="margin-bottom: 8px;">
+<input type="number" id="flow_lpm" value="" inputmode="decimal" step="any" oninput="syncPipeFlow('lpm')"><span class="unit">LPM</span>
+</div>
+<div class="input-wrapper">
+<input type="number" id="flow_cmh" value="" inputmode="decimal" step="any" oninput="syncPipeFlow('cmh')"><span class="unit">m³/h (噸)</span>
+</div>
+</div>
+
+<div class="result-box cyan">
+<div class="result-row"><span>管道截面積：</span><span class="result-val" id="resArea2">0.0081 m²</span></div>
+<div class="result-row"><span>對應實際流速 (V)：</span><span class="result-val highlight green-text" id="resV2">0.00 m/s</span></div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+function getNumber(id) { const el = document.getElementById(id); return el ? (parseFloat(el.value) || 0) : 0; }
+function setText(id, text) { const el = document.getElementById(id); if (el) el.innerHTML = text; }
+
+function switchTab(index) {
+const tabs = document.querySelectorAll('.tab-btn');
+const contents = document.querySelectorAll('.tab-content');
+tabs.forEach((tab, i) => tab.classList.toggle('active', i === index));
+contents.forEach((content, i) => content.classList.toggle('active', i === index));
+}
+
+function syncCircumference(type) {
+const elMM = document.getElementById('pipeCircumference');
+const elInch = document.getElementById('pipeInch');
+if (type === 'mm') {
+const mmVal = parseFloat(elMM.value) || 0;
+elInch.value = mmVal > 0 ? ((mmVal / Math.PI) / 25.4).toFixed(2) : '';
+} else if (type === 'inch') {
+const inchVal = parseFloat(elInch.value) || 0;
+elMM.value = inchVal > 0 ? (inchVal * 25.4 * Math.PI).toFixed(1) : '';
+}
+calcFlow();
+}
+
+function syncAdvTonnage(type) {
+const elRT = document.getElementById('knownRT');
+const elKW = document.getElementById('knownKW');
+if (type === 'rt') {
+const rtVal = parseFloat(elRT.value) || 0;
+elKW.value = rtVal > 0 ? (rtVal * 3.517).toFixed(1) : '';
+} else if (type === 'kw') {
+const kwVal = parseFloat(elKW.value) || 0;
+elRT.value = kwVal > 0 ? (kwVal / 3.517).toFixed(1) : '';
+}
+calcAdvCross();
+}
+
+function syncPipeID(type) {
+const elMM = document.getElementById('pipeID_mm');
+const elInch = document.getElementById('pipeID_inch');
+if (type === 'mm') {
+const mmVal = parseFloat(elMM.value) || 0;
+elInch.value = mmVal > 0 ? (mmVal / 25.4).toFixed(2) : '';
+} else if (type === 'inch') {
+const inchVal = parseFloat(elInch.value) || 0;
+elMM.value = inchVal > 0 ? (inchVal * 25.4).toFixed(1) : '';
+}
+calcPipeFlow2();
+}
+
+function syncPipeFlow(type) {
+const elLPM = document.getElementById('flow_lpm');
+const elCMH = document.getElementById('flow_cmh');
+if (type === 'lpm') {
+const lpmVal = parseFloat(elLPM.value) || 0;
+elCMH.value = lpmVal > 0 ? (lpmVal * 0.06).toFixed(1) : '';
+} else if (type === 'cmh') {
+const cmhVal = parseFloat(elCMH.value) || 0;
+elLPM.value = cmhVal > 0 ? Math.round(cmhVal / 0.06) : '';
+}
+calcPipeFlow2();
+}
+
+function syncCHFlow(type) {
+const elLPM = document.getElementById('flowRate');
+const elCMH = document.getElementById('flowRateCMH');
+if (type === 'lpm') {
+const lpmVal = parseFloat(elLPM.value) || 0;
+elCMH.value = lpmVal > 0 ? (lpmVal * 0.06).toFixed(1) : 0;
+} else if (type === 'cmh') {
+const cmhVal = parseFloat(elCMH.value) || 0;
+elLPM.value = cmhVal > 0 ? Math.round(cmhVal / 0.06) : 0;
+}
+calculateChillerAll();
+}
+
+function syncCWFlow(type) {
+const elLPM = document.getElementById('cwFlowRate');
+const elCMH = document.getElementById('cwFlowRateCMH');
+if (type === 'lpm') {
+const lpmVal = parseFloat(elLPM.value) || 0;
+elCMH.value = lpmVal > 0 ? (lpmVal * 0.06).toFixed(1) : 0;
+} else if (type === 'cmh') {
+const cmhVal = parseFloat(elCMH.value) || 0;
+elLPM.value = cmhVal > 0 ? Math.round(cmhVal / 0.06) : 0;
+}
+calculateChillerAll();
+}
+
+function syncPower(type) {
+const elV = document.getElementById('voltage');
+const elI = document.getElementById('current');
+const elPF = document.getElementById('pf');
+const elKW = document.getElementById('inputKW');
+if (type === 'vi') {
+const v = parseFloat(elV.value) || 0;
+const i = parseFloat(elI.value) || 0;
+const pf = parseFloat(elPF.value) || 0;
+const kw = (v * i * 1.73205 * pf) / 1000;
+elKW.value = kw > 0 ? kw.toFixed(2) : 0;
+}
+calculateChillerAll();
+}
+
+function calcFlow() {
+const circumference = getNumber('pipeCircumference');
+const thk = getNumber('wallThickness');
+const maxV = getNumber('maxVelocity');
+const od = circumference > 0 ? (circumference / Math.PI) : 0;
+const id = od - (2 * thk);
+const safeID = id > 0 ? id : 0;
+const area = Math.PI * Math.pow((safeID / 2) / 1000, 2);
+const flowCMM = maxV * area * 60;
+setText('resID', safeID.toFixed(1) + ' mm');
+setText('resArea', area.toFixed(4) + ' m²');
+setText('resFlow', flowCMM.toFixed(2) + ' CMM');
+}
+
+function calcAir() {
+const v = getNumber('vAir'); const i = getNumber('iAir'); const pf = getNumber('pfAir'); const flow = getNumber('airFlow');
+const kw = (v * i * 1.73205 * pf) / 1000;
+setText('resAirKW', kw.toFixed(2) + ' kW'); setText('resAirHP', (kw * 1.34).toFixed(2) + ' HP'); setText('resAirEff', (flow > 0 ? (kw / flow) : 0).toFixed(3) + ' kW/CMM');
+}
+
+function calcPumpLaws() {
+const f1 = getNumber('pumpF1'); const f2 = getNumber('pumpF2');
+const q1 = getNumber('pumpQ1'); const h1 = getNumber('pumpH1'); const p1 = getNumber('pumpP1');
+if (f1 > 0 && f2 > 0) {
+const ratio = f2 / f1;
+setText('resPumpQ2', (q1 * ratio).toFixed(0) + ' LPM');
+setText('resPumpH2', (h1 * Math.pow(ratio, 2)).toFixed(2) + ' m');
+setText('resPumpP2', (p1 * Math.pow(ratio, 3)).toFixed(2) + ' kW');
+}
+}
+
+function calculateChillerAll() {
+const flow = getNumber('flowRate'); const tIn = getNumber('tempIn'); const tOut = getNumber('tempOut');
+const cwFlow = getNumber('cwFlowRate'); const cwTIn = getNumber('cwTempIn'); const cwTOut = getNumber('cwTempOut');
+const compKW = getNumber('inputKW');
+const chDt = Math.abs(tIn - tOut); const cwDt = Math.abs(cwTOut - cwTIn);
+setText('chDeltaT', chDt.toFixed(2) + ' °C'); setText('cwDeltaT', cwDt.toFixed(2) + ' °C');
+const chKcalh = flow * 60 * chDt; const chRT = chKcalh / 3024; const chKW = chRT * 3.517;
+setText('f2_chRT', chRT.toFixed(2) + ' RT'); setText('f2_kcal', Math.round(chKcalh).toLocaleString() + ' kcal/h');
+setText('f1_kw', compKW.toFixed(2) + ' kW');
+const realKwRt = chRT > 0 ? (compKW / chRT) : 0;
+setText('chKwRtResult', realKwRt.toFixed(3) + ' kW/RT');
+const realCOP = compKW > 0 ? (chKW / compKW) : 0;
+setText('f6_cop', realCOP.toFixed(2)); setText('f6_kwrt', realKwRt.toFixed(3) + ' kW/RT');
+const cwKcalh = cwFlow * 60 * cwDt;
+setText('f3_cwKcal', Math.round(cwKcalh).toLocaleString() + ' kcal/h');
+const inOutRatio = chKcalh > 0 ? (cwKcalh / chKcalh) : 0;
+setText('f4_ratio', inOutRatio.toFixed(2));
+const compKcal = compKW * 860; let hbError = 0;
+if (cwKcalh > 0) {
+hbError = ((chKcalh + compKcal - cwKcalh) / cwKcalh) * 100;
+setText('f5_hbErr', hbError.toFixed(2) + ' %');
+const hbBox = document.getElementById('hbBox');
+if (Math.abs(hbError) > 5) {
+hbBox.style.borderColor = 'var(--accent-red)';
+document.getElementById('f5_hbErr').className = "result-val red-text highlight";
+} else {
+hbBox.style.borderColor = 'var(--accent-green)';
+document.getElementById('f5_hbErr').className = "result-val green-text highlight";
+}
+} else { setText('f5_hbErr', '0.00 %'); }
+}
+
+function calcAdvCross() {
+const dt = getNumber('dtPump'); const rt = getNumber('knownRT'); const kwHeat = getNumber('knownKW');
+const v = getNumber('vPump'); const i = getNumber('iPump'); const pf = getNumber('pfPump'); const effM = getNumber('effPump'); const effP = getNumber('effPumpBody');
+const lpmByRT = dt > 0 ? (rt * 3024) / (60 * dt) : 0;
+setText('resLpmByRT', lpmByRT.toFixed(1) + ' LPM');
+const lpmByKW = dt > 0 ? (kwHeat * 860) / (60 * dt) : 0;
+setText('resLpmByKW', lpmByKW.toFixed(1) + ' LPM');
+const kwMotor = (v * i * 1.73205 * pf) / 1000;
+setText('resPumpKw', kwMotor.toFixed(2) + ' kW');
+const lossKw = kwMotor * (1 - (effM * effP));
+const lpmByMotor = dt > 0 ? (lossKw * 860) / (60 * dt) : 0;
+setText('resLpmByMotor', lpmByMotor.toFixed(1) + ' LPM');
+}
+
+function calcPipeFlow2() {
+const id = getNumber('pipeID_mm');
+const qLpm = getNumber('flow_lpm');
+const area = Math.PI * Math.pow((id / 2) / 1000, 2);
+setText('resArea2', area.toFixed(4) + ' m²');
+if (area > 0) {
+const qM3h = (qLpm * 60) / 1000;
+const v = qM3h / (3600 * area);
+setText('resV2', v.toFixed(2) + ' m/s');
+} else { setText('resV2', '0.00 m/s'); }
+}
+
+function initAll() {
+syncCircumference('mm');
+syncAdvTonnage('rt');
+syncPipeID('mm');
+syncPipeFlow('lpm');
+calcFlow();
+calcAir();
+calcPumpLaws();
+calculateChillerAll();
+calcPipeFlow2();
+}
+
+window.onload = initAll;
+</script>
+</body>
+</html>
