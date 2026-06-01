@@ -5,211 +5,94 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>現場工程計算工具｜全客製完美版</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/otplib/12.0.1/otplib-browser.js"></script>
-
+ 
 <script>
 // ════════════════════════════════════════════════════
-//  裝置指紋鎖 + TOTP 驗證系統
-//  邏輯：每台新裝置首次必須輸入 Authenticator 密碼
-//        驗證成功後，產生裝置指紋存入 localStorage
-//        同一裝置下次開啟自動通過，不需再輸入
-//        別人拿到 URL 或 HTML 檔案，在新裝置上需重新向你要密碼
+//  裝置鎖定系統 v2 — 隨機 UUID 綁定（非指紋）
+//  每台裝置第一次必須輸入 Authenticator 密碼
+//  驗證成功後產生唯一 UUID 存入 localStorage
+//  別人拿到 URL，他的 localStorage 是空的 → 必須重新驗證
 // ════════════════════════════════════════════════════
-
+ 
 const SECRET_KEY = "HANKHANKCOMPTOOL";
-const DEVICE_STORAGE_KEY = "hank_tool_device_auth";
-
-// 產生裝置指紋（瀏覽器特徵組合）
-async function generateDeviceFingerprint() {
-    const nav = window.navigator;
-    const screen = window.screen;
-    const raw = [
-        nav.userAgent,
-        nav.language,
-        nav.hardwareConcurrency || '',
-        screen.colorDepth,
-        screen.width + 'x' + screen.height,
-        Intl.DateTimeFormat().resolvedOptions().timeZone,
-        nav.platform || ''
-    ].join('|');
-
-    // 用 SHA-256 產生指紋雜湊
-    const encoder = new TextEncoder();
-    const data = encoder.encode(raw);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 32);
-}
-
-// 顯示驗證畫面（覆蓋整個頁面）
-function showLockScreen(onSuccess) {
+const STORAGE_KEY = "hank_tool_uuid_v2";
+ 
+function showLockScreen() {
+    // 先藏住主體
+    document.body.style.visibility = 'hidden';
+ 
     const overlay = document.createElement('div');
     overlay.id = 'auth-overlay';
     overlay.style.cssText = `
-        position: fixed; inset: 0; z-index: 99999;
-        background: #0a0a0a;
-        display: flex; flex-direction: column;
-        align-items: center; justify-content: center;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        padding: 20px;
+        position:fixed;inset:0;z-index:99999;
+        background:#0a0a0a;
+        display:flex;flex-direction:column;
+        align-items:center;justify-content:center;
+        font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+        padding:20px;
     `;
     overlay.innerHTML = `
-        <div style="
-            width: 100%; max-width: 360px;
-            background: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            border-radius: 16px;
-            padding: 32px 24px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-        ">
-            <div style="font-size: 40px; margin-bottom: 16px;">🔐</div>
-            <h2 style="color: #ffffff; font-size: 18px; margin-bottom: 8px; font-weight: 600;">
-                Hank 的專屬工具
-            </h2>
-            <p style="color: #888; font-size: 13px; margin-bottom: 24px; line-height: 1.6;">
+        <div style="width:100%;max-width:360px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:16px;padding:32px 24px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+            <div style="font-size:40px;margin-bottom:16px;">🔐</div>
+            <h2 style="color:#fff;font-size:18px;margin-bottom:8px;font-weight:600;">Hank 的專屬工具</h2>
+            <p style="color:#888;font-size:13px;margin-bottom:24px;line-height:1.6;">
                 此裝置尚未授權。<br>
                 請輸入 Hank 手機 Authenticator<br>
                 當前的 <strong style="color:#4daafc">6 位數動態密碼</strong>
             </p>
-            <input
-                id="otp-input"
-                type="number"
-                inputmode="numeric"
-                maxlength="6"
-                placeholder="000000"
-                style="
-                    width: 100%;
-                    padding: 14px;
-                    font-size: 24px;
-                    text-align: center;
-                    letter-spacing: 8px;
-                    background: #0a0a0a;
-                    border: 1px solid #333;
-                    border-radius: 10px;
-                    color: #fff;
-                    outline: none;
-                    margin-bottom: 16px;
-                "
-                oninput="this.value = this.value.slice(0,6)"
+            <input id="otp-input" type="number" inputmode="numeric" placeholder="000000"
+                style="width:100%;padding:14px;font-size:24px;text-align:center;letter-spacing:8px;background:#0a0a0a;border:1px solid #333;border-radius:10px;color:#fff;outline:none;margin-bottom:16px;"
+                oninput="this.value=this.value.slice(0,6)"
             />
-            <button
-                onclick="window._verifyOTP()"
-                style="
-                    width: 100%;
-                    padding: 14px;
-                    background: #007aff;
-                    color: #fff;
-                    border: none;
-                    border-radius: 10px;
-                    font-size: 16px;
-                    font-weight: 600;
-                    cursor: pointer;
-                "
-            >驗證並解鎖此裝置</button>
-            <p id="auth-msg" style="color: #ff3b30; font-size: 13px; margin-top: 12px; min-height: 20px;"></p>
-            <p style="color: #444; font-size: 11px; margin-top: 16px; line-height: 1.5;">
-                驗證成功後，此裝置將自動記憶授權。<br>
+            <button onclick="window._verifyOTP()"
+                style="width:100%;padding:14px;background:#007aff;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;">
+                驗證並解鎖此裝置
+            </button>
+            <p id="auth-msg" style="color:#ff3b30;font-size:13px;margin-top:12px;min-height:20px;"></p>
+            <p style="color:#444;font-size:11px;margin-top:16px;line-height:1.5;">
+                驗證成功後此裝置自動記憶授權。<br>
                 其他裝置需重新向 Hank 取得密碼。
             </p>
         </div>
     `;
     document.body.appendChild(overlay);
-
-    // Enter 鍵觸發驗證
-    document.getElementById('otp-input').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') window._verifyOTP();
-    });
-
-    // 自動 focus
-    setTimeout(() => {
-        const input = document.getElementById('otp-input');
-        if (input) input.focus();
-    }, 100);
-
-    window._verifyOTP = async function() {
+    document.body.style.visibility = 'visible';
+ 
+    setTimeout(() => { const i = document.getElementById('otp-input'); if(i) i.focus(); }, 100);
+    document.getElementById('otp-input').addEventListener('keydown', e => { if(e.key==='Enter') window._verifyOTP(); });
+ 
+    window._verifyOTP = function() {
         const input = document.getElementById('otp-input');
         const msg = document.getElementById('auth-msg');
-        const userInput = (input.value || '').trim();
-
-        if (!userInput || userInput.length !== 6) {
-            msg.textContent = '⚠️ 請輸入 6 位數密碼';
-            return;
-        }
-
+        const val = (input.value||'').trim();
+        if (!val || val.length !== 6) { msg.textContent = '⚠️ 請輸入 6 位數密碼'; return; }
         try {
-            const isValid = otplib.totp.check(userInput, SECRET_KEY);
+            const isValid = otplib.totp.check(val, SECRET_KEY);
             if (isValid) {
-                // 驗證成功：產生裝置指紋並儲存
-                const fingerprint = await generateDeviceFingerprint();
-                const authData = {
-                    fingerprint: fingerprint,
-                    authorizedAt: Date.now(),
-                    userAgent: navigator.userAgent.substring(0, 50)
-                };
-                localStorage.setItem(DEVICE_STORAGE_KEY, JSON.stringify(authData));
-
-                // 顯示成功動畫
-                const overlay = document.getElementById('auth-overlay');
-                overlay.innerHTML = `
-                    <div style="text-align: center;">
-                        <div style="font-size: 64px; margin-bottom: 16px;">✅</div>
-                        <h2 style="color: #34c759; font-size: 20px; margin-bottom: 8px;">驗證成功！</h2>
-                        <p style="color: #888; font-size: 14px;">此裝置已授權，下次開啟不需再輸入密碼。</p>
-                    </div>
-                `;
-                setTimeout(() => {
-                    overlay.remove();
-                    onSuccess();
-                }, 1200);
+                // 產生隨機 UUID 存入此裝置 localStorage
+                const uuid = crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(36)+Date.now().toString(36));
+                localStorage.setItem(STORAGE_KEY, uuid);
+                overlay.innerHTML = `<div style="text-align:center;"><div style="font-size:64px;margin-bottom:16px;">✅</div><h2 style="color:#34c759;font-size:20px;margin-bottom:8px;">驗證成功！</h2><p style="color:#888;font-size:14px;">此裝置已授權，下次開啟不需再輸入密碼。</p></div>`;
+                setTimeout(() => { overlay.remove(); }, 1200);
             } else {
                 msg.textContent = '❌ 驗證碼錯誤或已過期，請重新輸入';
-                input.value = '';
-                input.focus();
+                input.value = ''; input.focus();
             }
-        } catch (e) {
-            msg.textContent = '⚠️ 驗證出錯，請重試';
-        }
+        } catch(e) { msg.textContent = '⚠️ 驗證出錯，請重試'; }
     };
 }
-
-// 主驗證流程
-async function checkAuthorization() {
-    // 等 otplib 載入
-    if (typeof otplib === 'undefined') {
-        setTimeout(checkAuthorization, 100);
-        return;
-    }
-
-    // 先隱藏主內容，避免未授權時被看到
-    document.body.style.visibility = 'hidden';
-
-    try {
-        const stored = localStorage.getItem(DEVICE_STORAGE_KEY);
-        if (stored) {
-            const authData = JSON.parse(stored);
-            const currentFingerprint = await generateDeviceFingerprint();
-
-            if (authData.fingerprint === currentFingerprint) {
-                // 指紋吻合，此裝置已授權 ✅
-                document.body.style.visibility = 'visible';
-                return;
-            }
-        }
-    } catch (e) {
-        // localStorage 讀取失敗，進入驗證流程
-    }
-
-    // 未授權裝置：顯示 Lock Screen
-    document.body.style.visibility = 'visible';
-    showLockScreen(() => {
-        // 解鎖成功後，什麼都不用做，頁面已顯示
-    });
+ 
+function checkAuthorization() {
+    if (typeof otplib === 'undefined') { setTimeout(checkAuthorization, 100); return; }
+    const stored = localStorage.getItem(STORAGE_KEY);
+    // 只要 localStorage 有值就放行，沒有就鎖
+    if (stored) return;
+    showLockScreen();
 }
-
-// DOM 載入後執行
+ 
 document.addEventListener('DOMContentLoaded', checkAuthorization);
 </script>
-
+ 
 <style>
 :root {
 --bg-color: #121212;
@@ -230,10 +113,11 @@ body { background-color: var(--bg-color); color: var(--text-main); padding: 10px
 
 .header { text-align: center; margin: 8px 0 16px; padding: 12px 8px; border: 1px solid var(--border-color); border-radius: 12px; background-color: var(--card-bg); }
 .header h1 { color: var(--text-highlight); font-size: 20px; letter-spacing: 1px; margin-bottom: 4px; }
-.header p { font-size: 12px; color: var(--accent-cyan); }
 
-.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background-color: var(--card-bg); border-radius: 10px; padding: 6px; margin-bottom: 15px; border: 1px solid var(--border-color); position: sticky; top: 8px; z-index: 10; }
-.tab-btn { padding: 10px 3px; text-align: center; background: none; border: none; color: var(--text-main); font-size: 12px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+/* 支援左右滑動的滾動式分頁列 */
+.tabs { display: flex; gap: 6px; background-color: var(--card-bg); border-radius: 10px; padding: 6px; margin-bottom: 15px; border: 1px solid var(--border-color); position: sticky; top: 8px; z-index: 10; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab-btn { flex: 0 0 auto; padding: 8px 14px; text-align: center; background: none; border: none; color: var(--text-main); font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; }
 .tab-btn.active { background-color: var(--accent-blue); color: var(--text-highlight); }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
@@ -248,6 +132,8 @@ body { background-color: var(--bg-color); color: var(--text-main); padding: 10px
 .section-title.orange::before { background-color: var(--accent-orange); }
 .section-title.cyan { color: var(--accent-cyan); }
 .section-title.cyan::before { background-color: var(--accent-cyan); }
+.section-title.red { color: var(--accent-red); }
+.section-title.red::before { background-color: var(--accent-red); }
 
 .form-group { margin-bottom: 12px; }
 label { display: block; font-size: 13px; margin-bottom: 5px; color: var(--text-main); }
@@ -263,6 +149,7 @@ input:focus { border-color: var(--accent-blue); }
 .result-box.green { border-color: var(--accent-green); background-color: rgba(52,199,89,0.08); }
 .result-box.orange { border-color: var(--accent-orange); background-color: rgba(255,149,0,0.08); }
 .result-box.cyan { border-color: var(--accent-cyan); background-color: rgba(77,170,252,0.08); }
+.result-box.red { border-color: var(--accent-red); background-color: rgba(255,59,48,0.08); }
 
 .result-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 14px; }
 .result-row:last-child { margin-bottom: 0; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.06); }
@@ -281,10 +168,14 @@ input:focus { border-color: var(--accent-blue); }
 <h1>現場工程計算工具</h1>
 </div>
 
-<div class="tabs">
-<button class="tab-btn active" onclick="switchTab(0)">基礎量測公式</button>
-<button class="tab-btn" onclick="switchTab(1)">冰水系統公式</button>
-<button class="tab-btn" onclick="switchTab(2)">進階公式</button>
+<div class="tabs" id="tabsOuter">
+<button class="tab-btn active" onclick="switchTab(0)">管路流速</button>
+<button class="tab-btn" onclick="switchTab(1)">空壓能效</button>
+<button class="tab-btn" onclick="switchTab(2)">泵浦變頻</button>
+<button class="tab-btn" onclick="switchTab(3)">熱平衡分析</button>
+<button class="tab-btn" onclick="switchTab(4)">多維比對</button>
+<button class="tab-btn" onclick="switchTab(5)">內徑流速</button>
+<button class="tab-btn" onclick="switchTab(6)">NFB選用</button>
 </div>
 
 <div id="tab0" class="tab-content active">
@@ -298,7 +189,7 @@ input:focus { border-color: var(--accent-blue); }
 <input type="number" id="pipeCircumference" value="" inputmode="decimal" step="any" oninput="syncCircumference('mm')"><span class="unit">mm</span>
 </div>
 <div class="input-wrapper">
-<input type="number" id="pipeInch" value="4.51" inputmode="decimal" step="any" oninput="syncCircumference('inch')"><span class="unit">吋 (inch)</span>
+<input type="number" id="pipeInch" value="" inputmode="decimal" step="any" oninput="syncCircumference('inch')"><span class="unit">吋 (inch)</span>
 </div>
 </div>
 
@@ -310,7 +201,9 @@ input:focus { border-color: var(--accent-blue); }
 <div class="result-row"><span>估算最大流量：</span><span class="result-val highlight green-text" id="resFlow">0.00 CMM</span></div>
 </div>
 </div>
+</div>
 
+<div id="tab1" class="tab-content">
 <div class="section-card">
 <div class="section-title orange">空壓效能與比功率</div>
 <div class="form-group"><label>輸入電壓</label><div class="input-wrapper"><input type="number" id="vAir" value="" inputmode="decimal" oninput="calcAir()"><span class="unit">V</span></div></div>
@@ -323,7 +216,9 @@ input:focus { border-color: var(--accent-blue); }
 <div class="result-row"><span>空壓機率能（比功率）：</span><span class="result-val highlight orange-text" id="resAirEff">0.000 kW/CMM</span></div>
 </div>
 </div>
+</div>
 
+<div id="tab2" class="tab-content">
 <div class="section-card">
 <div class="section-title green">泵浦相似定律變頻計算</div>
 <div class="grid-2">
@@ -341,7 +236,7 @@ input:focus { border-color: var(--accent-blue); }
 </div>
 </div>
 
-<div id="tab1" class="tab-content">
+<div id="tab3" class="tab-content">
 <div class="section-card">
 <div class="section-title cyan">1. 冰水側輸入</div>
 <div class="grid-2">
@@ -385,7 +280,7 @@ input:focus { border-color: var(--accent-blue); }
 <div class="result-box orange">
 <div class="section-title" style="font-size: 13px; margin-bottom: 8px;">實測主機電功率</div>
 <div class="result-row"><span>主機電功率 (kW)：</span><span class="result-val" id="f1_kw">0.00 kW</span></div>
-<div class="section-title green" style="font-size: 13px; margin-top: 12px; margin-bottom: 8px;">主機能效指標 (RT/COP/ (kW/RT))</div>
+<div class="section-title green" style="font-size: 13px; margin-top: 12px; margin-bottom: 8px;">主機能效指標 (RT / COP / (kW/RT))</div>
 <div class="result-row"><span>主機製冷能力：</span><span class="result-val green-text highlight" id="f2_chRT">0.00 RT</span></div>
 <div class="result-row"><span>性能係數 (COP)：</span><span class="result-val green-text highlight" id="f6_cop">0.00</span></div>
 <div class="result-row"><span>每冷凍噸能耗 (kW/RT)：</span><span class="result-val green-text highlight" id="f6_kwrt">0.000 kW/RT</span></div>
@@ -403,15 +298,13 @@ input:focus { border-color: var(--accent-blue); }
 </div>
 </div>
 
-<div id="tab2" class="tab-content">
+<div id="tab4" class="tab-content">
 <div class="section-card">
 <div class="section-title blue">現場流量交叉比對驗證</div>
-
 <div class="grid-2">
 <div class="form-group"><label>量測溫差 (ΔT)</label><div class="input-wrapper"><input type="number" id="dtPump" value="" inputmode="decimal" step="any" oninput="calcAdvCross()"><span class="unit">°C</span></div></div>
 <div class="form-group"><label>現場已知噸數</label><div class="input-wrapper"><input type="number" id="knownRT" value="" inputmode="decimal" step="any" oninput="syncAdvTonnage('rt')"><span class="unit">RT</span></div></div>
 </div>
-
 <div class="form-group"><label>現場已知製冷能力功率</label><div class="input-wrapper"><input type="number" id="knownKW" value="" inputmode="decimal" step="any" oninput="syncAdvTonnage('kw')"><span class="unit">kW</span></div></div>
 
 <hr style="border: none; border-top: 1px dashed var(--border-color); margin: 15px 0;">
@@ -435,7 +328,9 @@ input:focus { border-color: var(--accent-blue); }
 <div class="result-row"><span>4. 依馬達損失熱反推：</span><span class="result-val" id="resLpmByMotor">0.0 LPM</span></div>
 </div>
 </div>
+</div>
 
+<div id="tab5" class="tab-content">
 <div class="section-card">
 <div class="section-title cyan">管內徑流速流量換算</div>
 <div class="form-group">
@@ -459,11 +354,54 @@ input:focus { border-color: var(--accent-blue); }
 </div>
 
 <div class="result-box cyan">
-<div class="result-row"><span>管道截面積：</span><span class="result-val" id="resArea2">0.0081 m²</span></div>
+<div class="result-row"><span>管道截面積：</span><span class="result-val" id="resArea2">0.0000 m²</span></div>
 <div class="result-row"><span>對應實際流速 (V)：</span><span class="result-val highlight green-text" id="resV2">0.00 m/s</span></div>
 </div>
 </div>
 </div>
+
+<div id="tab6" class="tab-content">
+<div class="section-card">
+<div class="section-title red">三相馬達/主機 NFB 開關智慧選用</div>
+<div class="grid-2">
+<div class="form-group">
+<label>馬力規格 (HP)</label>
+<div class="input-wrapper"><input type="number" id="nfbHP" value="" inputmode="decimal" step="any" oninput="syncNFBPower('hp')"><span class="unit">HP</span></div>
+</div>
+<div class="form-group">
+<label>電功率 (kW)</label>
+<div class="input-wrapper"><input type="number" id="nfbKW" value="" inputmode="decimal" step="any" oninput="syncNFBPower('kw')"><span class="unit">kW</span></div>
+</div>
+</div>
+
+<div class="grid-2">
+<div class="form-group">
+<label>平均三相電壓 (V)</label>
+<div class="input-wrapper"><input type="number" id="nfbV" value="" inputmode="decimal" oninput="calcNFBSelection()"><span class="unit">V</span></div>
+</div>
+<div class="form-group">
+<label>功率因數 (PF)</label>
+<div class="input-wrapper"><input type="number" id="nfbPF" value="" inputmode="decimal" step="any" max="1" oninput="calcNFBSelection()"><span class="unit">--</span></div>
+</div>
+</div>
+
+<div class="form-group">
+<label>現場實測平均電流 (A) <span style="color:#777; font-size:11px;">(供對照參考)</span></label>
+<div class="input-wrapper"><input type="number" id="nfbMeasuredA" value="" inputmode="decimal" step="any" oninput="calcNFBSelection()"><span class="unit">A</span></div>
+</div>
+
+<div class="result-box red">
+<div class="section-title" style="font-size: 13px; margin-bottom: 8px; color: var(--accent-red);">📋 運轉電流與 NFB 選用規格</div>
+<div class="result-row"><span>計算理論運轉電流：</span><span class="result-val cyan-text" id="resNfbRunA">0.00 A</span></div>
+<div class="result-row"><span>實測電流對照：</span><span class="result-val" id="resNfbMeasuredA">0.00 A</span></div>
+<div class="result-row"><span>安全放大需求電流 (1.5倍)：</span><span class="result-val orange-text" id="resNfbTargetA">0.00 A</span></div>
+<div class="result-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(255,59,48,0.3);">
+<span>💡 推薦選用 NFB 規格：</span><span class="result-val red-text highlight" id="resNfbSpec">-- A</span>
+</div>
+</div>
+</div>
+</div>
+
 </div>
 
 <script>
@@ -475,17 +413,29 @@ const tabs = document.querySelectorAll('.tab-btn');
 const contents = document.querySelectorAll('.tab-content');
 tabs.forEach((tab, i) => tab.classList.toggle('active', i === index));
 contents.forEach((content, i) => content.classList.toggle('active', i === index));
+
+// 自動滾動選中的分頁頁籤，防止被遮擋
+const activeBtn = tabs[index];
+const outer = document.getElementById('tabsOuter');
+if (outer && activeBtn) {
+const left = activeBtn.offsetLeft - (outer.clientWidth / 2) + (activeBtn.clientWidth / 2);
+outer.scrollTo({ left: left, behavior: 'smooth' });
+}
 }
 
 function syncCircumference(type) {
 const elMM = document.getElementById('pipeCircumference');
 const elInch = document.getElementById('pipeInch');
 if (type === 'mm') {
+if (elMM.value.trim() === '') { elInch.value = ''; } else {
 const mmVal = parseFloat(elMM.value) || 0;
 elInch.value = mmVal > 0 ? ((mmVal / Math.PI) / 25.4).toFixed(2) : '';
+}
 } else if (type === 'inch') {
+if (elInch.value.trim() === '') { elMM.value = ''; } else {
 const inchVal = parseFloat(elInch.value) || 0;
 elMM.value = inchVal > 0 ? (inchVal * 25.4 * Math.PI).toFixed(1) : '';
+}
 }
 calcFlow();
 }
@@ -494,24 +444,43 @@ function syncAdvTonnage(type) {
 const elRT = document.getElementById('knownRT');
 const elKW = document.getElementById('knownKW');
 if (type === 'rt') {
-const rtVal = parseFloat(elRT.value) || 0;
-elKW.value = rtVal > 0 ? (rtVal * 3.517).toFixed(1) : '';
+if (elRT.value.trim() === '') { elKW.value = ''; } else {
+elKW.value = (parseFloat(elRT.value) * 3.517).toFixed(1);
+}
 } else if (type === 'kw') {
-const kwVal = parseFloat(elKW.value) || 0;
-elRT.value = kwVal > 0 ? (kwVal / 3.517).toFixed(1) : '';
+if (elKW.value.trim() === '') { elRT.value = ''; } else {
+elRT.value = (parseFloat(elKW.value) / 3.517).toFixed(1);
+}
 }
 calcAdvCross();
+}
+
+function syncNFBPower(type) {
+const elHP = document.getElementById('nfbHP');
+const elKW = document.getElementById('nfbKW');
+if (type === 'hp') {
+if (elHP.value.trim() === '') { elKW.value = ''; } else {
+elKW.value = (parseFloat(elHP.value) * 0.746).toFixed(2);
+}
+} else if (type === 'kw') {
+if (elKW.value.trim() === '') { elHP.value = ''; } else {
+elHP.value = (parseFloat(elKW.value) / 0.746).toFixed(1);
+}
+}
+calcNFBSelection();
 }
 
 function syncPipeID(type) {
 const elMM = document.getElementById('pipeID_mm');
 const elInch = document.getElementById('pipeID_inch');
 if (type === 'mm') {
-const mmVal = parseFloat(elMM.value) || 0;
-elInch.value = mmVal > 0 ? (mmVal / 25.4).toFixed(2) : '';
+if (elMM.value.trim() === '') { elInch.value = ''; } else {
+elInch.value = (parseFloat(elMM.value) / 25.4).toFixed(2);
+}
 } else if (type === 'inch') {
-const inchVal = parseFloat(elInch.value) || 0;
-elMM.value = inchVal > 0 ? (inchVal * 25.4).toFixed(1) : '';
+if (elInch.value.trim() === '') { elMM.value = ''; } else {
+elMM.value = (parseFloat(elInch.value) * 25.4).toFixed(1);
+}
 }
 calcPipeFlow2();
 }
@@ -520,11 +489,13 @@ function syncPipeFlow(type) {
 const elLPM = document.getElementById('flow_lpm');
 const elCMH = document.getElementById('flow_cmh');
 if (type === 'lpm') {
-const lpmVal = parseFloat(elLPM.value) || 0;
-elCMH.value = lpmVal > 0 ? (lpmVal * 0.06).toFixed(1) : '';
+if (elLPM.value.trim() === '') { elCMH.value = ''; } else {
+elCMH.value = (parseFloat(elLPM.value) * 0.06).toFixed(1);
+}
 } else if (type === 'cmh') {
-const cmhVal = parseFloat(elCMH.value) || 0;
-elLPM.value = cmhVal > 0 ? Math.round(cmhVal / 0.06) : '';
+if (elCMH.value.trim() === '') { elLPM.value = ''; } else {
+elLPM.value = Math.round(parseFloat(elCMH.value) / 0.06);
+}
 }
 calcPipeFlow2();
 }
@@ -533,11 +504,9 @@ function syncCHFlow(type) {
 const elLPM = document.getElementById('flowRate');
 const elCMH = document.getElementById('flowRateCMH');
 if (type === 'lpm') {
-const lpmVal = parseFloat(elLPM.value) || 0;
-elCMH.value = lpmVal > 0 ? (lpmVal * 0.06).toFixed(1) : 0;
+elCMH.value = (getNumber('flowRate') * 0.06).toFixed(1);
 } else if (type === 'cmh') {
-const cmhVal = parseFloat(elCMH.value) || 0;
-elLPM.value = cmhVal > 0 ? Math.round(cmhVal / 0.06) : 0;
+elLPM.value = Math.round(getNumber('flowRateCMH') / 0.06);
 }
 calculateChillerAll();
 }
@@ -546,42 +515,28 @@ function syncCWFlow(type) {
 const elLPM = document.getElementById('cwFlowRate');
 const elCMH = document.getElementById('cwFlowRateCMH');
 if (type === 'lpm') {
-const lpmVal = parseFloat(elLPM.value) || 0;
-elCMH.value = lpmVal > 0 ? (lpmVal * 0.06).toFixed(1) : 0;
+elCMH.value = (getNumber('cwFlowRate') * 0.06).toFixed(1);
 } else if (type === 'cmh') {
-const cmhVal = parseFloat(elCMH.value) || 0;
-elLPM.value = cmhVal > 0 ? Math.round(cmhVal / 0.06) : 0;
+elLPM.value = Math.round(getNumber('cwFlowRateCMH') / 0.06);
 }
 calculateChillerAll();
 }
 
 function syncPower(type) {
-const elV = document.getElementById('voltage');
-const elI = document.getElementById('current');
-const elPF = document.getElementById('pf');
-const elKW = document.getElementById('inputKW');
+const v = getNumber('voltage'); const i = getNumber('current'); const pf = getNumber('pf');
 if (type === 'vi') {
-const v = parseFloat(elV.value) || 0;
-const i = parseFloat(elI.value) || 0;
-const pf = parseFloat(elPF.value) || 0;
-const kw = (v * i * 1.73205 * pf) / 1000;
-elKW.value = kw > 0 ? kw.toFixed(2) : 0;
+document.getElementById('inputKW').value = ((v * i * 1.73205 * pf) / 1000).toFixed(2);
 }
 calculateChillerAll();
 }
 
 function calcFlow() {
 const circumference = getNumber('pipeCircumference');
-const thk = getNumber('wallThickness');
-const maxV = getNumber('maxVelocity');
+const thk = getNumber('wallThickness'); const maxV = getNumber('maxVelocity');
 const od = circumference > 0 ? (circumference / Math.PI) : 0;
-const id = od - (2 * thk);
-const safeID = id > 0 ? id : 0;
-const area = Math.PI * Math.pow((safeID / 2) / 1000, 2);
-const flowCMM = maxV * area * 60;
-setText('resID', safeID.toFixed(1) + ' mm');
-setText('resArea', area.toFixed(4) + ' m²');
-setText('resFlow', flowCMM.toFixed(2) + ' CMM');
+const id = Math.max(0, od - (2 * thk));
+const area = Math.PI * Math.pow((id / 2) / 1000, 2);
+setText('resID', id.toFixed(1) + ' mm'); setText('resArea', area.toFixed(4) + ' m²'); setText('resFlow', (maxV * area * 60).toFixed(2) + ' CMM');
 }
 
 function calcAir() {
@@ -612,65 +567,49 @@ setText('f2_chRT', chRT.toFixed(2) + ' RT'); setText('f2_kcal', Math.round(chKca
 setText('f1_kw', compKW.toFixed(2) + ' kW');
 const realKwRt = chRT > 0 ? (compKW / chRT) : 0;
 setText('chKwRtResult', realKwRt.toFixed(3) + ' kW/RT');
-const realCOP = compKW > 0 ? (chKW / compKW) : 0;
-setText('f6_cop', realCOP.toFixed(2)); setText('f6_kwrt', realKwRt.toFixed(3) + ' kW/RT');
-const cwKcalh = cwFlow * 60 * cwDt;
-setText('f3_cwKcal', Math.round(cwKcalh).toLocaleString() + ' kcal/h');
-const inOutRatio = chKcalh > 0 ? (cwKcalh / chKcalh) : 0;
-setText('f4_ratio', inOutRatio.toFixed(2));
-const compKcal = compKW * 860; let hbError = 0;
+setText('f6_cop', (compKW > 0 ? (chKW / compKW) : 0).toFixed(2)); setText('f6_kwrt', realKwRt.toFixed(3) + ' kW/RT');
+const cwKcalh = cwFlow * 60 * cwDt; setText('f3_cwKcal', Math.round(cwKcalh).toLocaleString() + ' kcal/h');
+setText('f4_ratio', (chKcalh > 0 ? (cwKcalh / chKcalh) : 0).toFixed(2));
 if (cwKcalh > 0) {
-hbError = ((chKcalh + compKcal - cwKcalh) / cwKcalh) * 100;
+const hbError = ((chKcalh + (compKW * 860) - cwKcalh) / cwKcalh) * 100;
 setText('f5_hbErr', hbError.toFixed(2) + ' %');
-const hbBox = document.getElementById('hbBox');
-if (Math.abs(hbError) > 5) {
-hbBox.style.borderColor = 'var(--accent-red)';
-document.getElementById('f5_hbErr').className = "result-val red-text highlight";
-} else {
-hbBox.style.borderColor = 'var(--accent-green)';
-document.getElementById('f5_hbErr').className = "result-val green-text highlight";
-}
+document.getElementById('hbBox').style.borderColor = Math.abs(hbError) > 5 ? 'var(--accent-red)' : 'var(--accent-green)';
+document.getElementById('f5_hbErr').className = Math.abs(hbError) > 5 ? "result-val red-text highlight" : "result-val green-text highlight";
 } else { setText('f5_hbErr', '0.00 %'); }
 }
 
 function calcAdvCross() {
 const dt = getNumber('dtPump'); const rt = getNumber('knownRT'); const kwHeat = getNumber('knownKW');
 const v = getNumber('vPump'); const i = getNumber('iPump'); const pf = getNumber('pfPump'); const effM = getNumber('effPump'); const effP = getNumber('effPumpBody');
-const lpmByRT = dt > 0 ? (rt * 3024) / (60 * dt) : 0;
-setText('resLpmByRT', lpmByRT.toFixed(1) + ' LPM');
-const lpmByKW = dt > 0 ? (kwHeat * 860) / (60 * dt) : 0;
-setText('resLpmByKW', lpmByKW.toFixed(1) + ' LPM');
-const kwMotor = (v * i * 1.73205 * pf) / 1000;
-setText('resPumpKw', kwMotor.toFixed(2) + ' kW');
-const lossKw = kwMotor * (1 - (effM * effP));
-const lpmByMotor = dt > 0 ? (lossKw * 860) / (60 * dt) : 0;
-setText('resLpmByMotor', lpmByMotor.toFixed(1) + ' LPM');
+setText('resLpmByRT', (dt > 0 ? (rt * 3024) / (60 * dt) : 0).toFixed(1) + ' LPM');
+setText('resLpmByKW', (dt > 0 ? (kwHeat * 860) / (60 * dt) : 0).toFixed(1) + ' LPM');
+const kwMotor = (v * i * 1.73205 * pf) / 1000; setText('resPumpKw', kwMotor.toFixed(2) + ' kW');
+setText('resLpmByMotor', (dt > 0 ? (kwMotor * (1 - (effM * effP)) * 860) / (60 * dt) : 0).toFixed(1) + ' LPM');
 }
 
 function calcPipeFlow2() {
-const id = getNumber('pipeID_mm');
-const qLpm = getNumber('flow_lpm');
-const area = Math.PI * Math.pow((id / 2) / 1000, 2);
-setText('resArea2', area.toFixed(4) + ' m²');
-if (area > 0) {
-const qM3h = (qLpm * 60) / 1000;
-const v = qM3h / (3600 * area);
-setText('resV2', v.toFixed(2) + ' m/s');
-} else { setText('resV2', '0.00 m/s'); }
+const id = getNumber('pipeID_mm'); const qLpm = getNumber('flow_lpm');
+const area = Math.PI * Math.pow((id / 2) / 1000, 2); setText('resArea2', area.toFixed(4) + ' m²');
+setText('resV2', (area > 0 ? ((qLpm * 60) / 1000) / (3600 * area) : 0).toFixed(2) + ' m/s');
+}
+
+function calcNFBSelection() {
+const kw = getNumber('nfbKW'); const v = getNumber('nfbV'); const pf = getNumber('nfbPF'); const measuredA = getNumber('nfbMeasuredA');
+const runA = (v > 0 && pf > 0) ? (kw * 1000) / (1.73205 * v * pf) : 0;
+setText('resNfbRunA', runA > 0 ? runA.toFixed(2) + ' A' : '0.00 A');
+setText('resNfbMeasuredA', measuredA > 0 ? measuredA.toFixed(2) + ' A' : '0.00 A');
+const targetA = runA * 1.5; setText('resNfbTargetA', targetA > 0 ? targetA.toFixed(2) + ' A' : '0.00 A');
+if (targetA === 0) { setText('resNfbSpec', '-- A'); return; }
+const nfbStandards = [15, 20, 30, 40, 50, 60, 75, 100, 125, 150, 175, 200, 225, 250, 300, 400, 500, 630, 800];
+let chosenSpec = nfbStandards[nfbStandards.length - 1];
+for (let i = 0; i < nfbStandards.length; i++) { if (nfbStandards[i] >= targetA) { chosenSpec = nfbStandards[i]; break; } }
+setText('resNfbSpec', chosenSpec + ' A');
 }
 
 function initAll() {
-syncCircumference('mm');
-syncAdvTonnage('rt');
-syncPipeID('mm');
-syncPipeFlow('lpm');
-calcFlow();
-calcAir();
-calcPumpLaws();
-calculateChillerAll();
-calcPipeFlow2();
+syncCircumference('inch'); syncAdvTonnage('rt'); syncPipeID('mm'); syncPipeFlow('lpm');
+calcFlow(); calcAir(); calcPumpLaws(); calculateChillerAll(); calcPipeFlow2(); calcNFBSelection();
 }
-
 window.onload = initAll;
 </script>
 </body>
