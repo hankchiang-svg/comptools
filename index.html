@@ -15,7 +15,7 @@
 // ════════════════════════════════════════════════════
  
 const SECRET_KEY = "HANKHANKCOMPTOOL";
-const STORAGE_KEY = "hank_tool_uuid_v2";
+const STORAGE_KEY = "comp_tool_uuid_v2";
  
 function showLockScreen() {
     // 先藏住主體
@@ -90,10 +90,11 @@ function checkAuthorization() {
     showLockScreen();
 }
  
-document.addEventListener('load', checkAuthorization);
+
+
+checkAuthorization();
 </script>
- 
-<style>
+ <style>
 :root {
 --bg-color: #121212;
 --card-bg: #1e1e1e;
@@ -173,7 +174,7 @@ input:focus { border-color: var(--accent-blue); }
 <button class="tab-btn" onclick="switchTab(1)">空壓能效</button>
 <button class="tab-btn" onclick="switchTab(2)">泵浦變頻</button>
 <button class="tab-btn" onclick="switchTab(3)">熱平衡分析</button>
-<button class="tab-btn" onclick="switchTab(4)">多維比對</button>
+<button class="tab-btn" onclick="switchTab(4)">數據比對</button>
 <button class="tab-btn" onclick="switchTab(5)">內徑流速</button>
 <button class="tab-btn" onclick="switchTab(6)">NFB選用</button>
 </div>
@@ -385,15 +386,9 @@ input:focus { border-color: var(--accent-blue); }
 </div>
 </div>
 
-<div class="form-group">
-<label>現場實測平均電流 (A) <span style="color:#777; font-size:11px;">(供對照參考)</span></label>
-<div class="input-wrapper"><input type="number" id="nfbMeasuredA" value="" inputmode="decimal" step="any" oninput="calcNFBSelection()"><span class="unit">A</span></div>
-</div>
-
 <div class="result-box red">
 <div class="section-title" style="font-size: 13px; margin-bottom: 8px; color: var(--accent-red);">📋 運轉電流與 NFB 選用規格</div>
 <div class="result-row"><span>計算理論運轉電流：</span><span class="result-val cyan-text" id="resNfbRunA">0.00 A</span></div>
-<div class="result-row"><span>實測電流對照：</span><span class="result-val" id="resNfbMeasuredA">0.00 A</span></div>
 <div class="result-row"><span>安全放大需求電流 (1.5倍)：</span><span class="result-val orange-text" id="resNfbTargetA">0.00 A</span></div>
 <div class="result-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(255,59,48,0.3);">
 <span>💡 推薦選用 NFB 規格：</span><span class="result-val red-text highlight" id="resNfbSpec">-- A</span>
@@ -594,10 +589,9 @@ setText('resV2', (area > 0 ? ((qLpm * 60) / 1000) / (3600 * area) : 0).toFixed(2
 }
 
 function calcNFBSelection() {
-const kw = getNumber('nfbKW'); const v = getNumber('nfbV'); const pf = getNumber('nfbPF'); const measuredA = getNumber('nfbMeasuredA');
+const kw = getNumber('nfbKW'); const v = getNumber('nfbV'); const pf = getNumber('nfbPF');
 const runA = (v > 0 && pf > 0) ? (kw * 1000) / (1.73205 * v * pf) : 0;
 setText('resNfbRunA', runA > 0 ? runA.toFixed(2) + ' A' : '0.00 A');
-setText('resNfbMeasuredA', measuredA > 0 ? measuredA.toFixed(2) + ' A' : '0.00 A');
 const targetA = runA * 1.5; setText('resNfbTargetA', targetA > 0 ? targetA.toFixed(2) + ' A' : '0.00 A');
 if (targetA === 0) { setText('resNfbSpec', '-- A'); return; }
 const nfbStandards = [15, 20, 30, 40, 50, 60, 75, 100, 125, 150, 175, 200, 225, 250, 300, 400, 500, 630, 800];
