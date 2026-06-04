@@ -2,10 +2,185 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>現場工程計算工具｜精準分頁版</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>現場工程計算工具 v20260603-clean</title>
 <style>
-/* ── 鎖定畫面 ── */
+
+:root{
+--bg-color:#121212;
+--card-bg:#1e1e1e;
+--accent-blue:#007aff;
+--accent-green:#34c759;
+--accent-orange:#ff9500;
+--accent-cyan:#4daafc;
+--accent-red:#ff3b30;
+--text-main:#aaaaaa;
+--text-highlight:#ffffff;
+--border-color:#333333;
+--box-h:58px;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;}
+html,body{width:100%;max-width:100%;overflow-x:hidden;background:var(--bg-color);color:var(--text-main);font-size:16px;}
+body{padding:10px;}
+.app-container{width:100%;max-width:none;margin:0;padding:0;overflow-x:hidden;}
+.header{width:100%;background:var(--card-bg);border:1px solid var(--border-color);border-radius:16px;padding:14px 10px;margin:8px 0 14px;text-align:center;}
+.header h1{color:var(--text-highlight);font-size:22px;line-height:1.3;letter-spacing:1px;}
+.version-note{font-size:12px;color:var(--accent-green);margin-top:4px;}
+.tabs{width:100%;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:var(--card-bg);border:1px solid var(--border-color);border-radius:16px;padding:8px;margin:0 0 16px;position:sticky;top:8px;z-index:10;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab-btn{flex:0 0 136px;width:136px;height:58px;min-width:136px;max-width:136px;border:none;border-radius:14px;background:transparent;color:var(--text-main);font-size:17px;font-weight:700;line-height:1.15;display:flex;align-items:center;justify-content:center;text-align:center;white-space:normal;cursor:pointer;}
+.tab-btn.nfb-tab{
+font-size:17px;
+white-space:normal;
+line-height:1.15;
+}
+.tab-btn.active{background:var(--accent-blue);color:var(--text-highlight);box-shadow:0 4px 12px rgba(0,122,255,.35);}
+.tab-content{display:none;width:100%;max-width:100%;overflow-x:hidden;}
+.tab-content.active{display:block;}
+.section-card{width:100%;max-width:100%;background:var(--card-bg);border:1px solid var(--border-color);border-radius:16px;padding:16px;margin:0 0 16px;box-shadow:0 4px 8px rgba(0,0,0,.12);overflow:hidden;}
+.section-title{width:100%;min-height:28px;font-size:18px;font-weight:800;line-height:1.35;color:var(--text-highlight);margin:0 0 16px;display:flex;align-items:center;}
+.section-title::before{content:"";display:inline-block;width:5px;height:18px;background:var(--accent-blue);margin-right:8px;border-radius:3px;flex:0 0 auto;}
+.section-title.green{color:var(--accent-green);}
+.section-title.green::before{background:var(--accent-green);}
+.section-title.orange{color:var(--accent-orange);}
+.section-title.orange::before{background:var(--accent-orange);}
+.section-title.cyan{color:var(--accent-cyan);}
+.section-title.cyan::before{background:var(--accent-cyan);}
+.section-title.red{color:var(--accent-red);}
+.section-title.red::before{background:var(--accent-red);}
+.grid-2{display:block;width:100%;max-width:100%;}
+.form-group{display:block;width:100%;max-width:100%;height:88px;min-height:88px;margin:0 0 14px;padding:0;overflow:hidden;}
+label{display:block;width:100%;height:22px;line-height:22px;font-size:15px;margin:0 0 8px;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.input-wrapper{position:relative;display:block;width:100%;height:var(--box-h);min-height:var(--box-h);max-height:var(--box-h);margin:0;padding:0;overflow:hidden;}
+input,select{display:block;width:100%;min-width:100%;max-width:100%;height:var(--box-h);min-height:var(--box-h);max-height:var(--box-h);background:var(--bg-color);border:1px solid var(--border-color);border-radius:14px;color:var(--text-highlight);font-size:20px;line-height:var(--box-h);outline:none;padding:0 52px 0 14px;margin:0;-webkit-appearance:none;appearance:none;}
+select{line-height:normal;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%23aaaaaa'><polygon points='0,0 10,0 5,6'/></svg>");background-repeat:no-repeat;background-position:right 14px center;}
+input:focus,select:focus{border-color:var(--accent-blue);}
+.unit{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:14px;line-height:1;color:#888;pointer-events:none;}
+.result-box{width:100%;max-width:100%;border:1px dashed var(--border-color);border-radius:14px;padding:16px;margin:16px 0 0;background:rgba(255,255,255,.025);overflow:hidden;}
+.result-box.blue{border-color:var(--accent-blue);background:rgba(0,122,255,.08);}
+.result-box.green{border-color:var(--accent-green);background:rgba(52,199,89,.08);}
+.result-box.orange{border-color:var(--accent-orange);background:rgba(255,149,0,.08);}
+.result-box.cyan{border-color:var(--accent-cyan);background:rgba(77,170,252,.08);}
+.result-box.red{border-color:var(--accent-red);background:rgba(255,59,48,.08);}
+.result-row{width:100%;min-height:50px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:16px;}
+.result-row:last-child{border-top:1px solid rgba(255,255,255,.06);padding-top:8px;}
+.result-val{font-size:22px;font-weight:800;color:var(--text-highlight);text-align:right;}
+.highlight{font-size:24px;}
+.green-text{color:var(--accent-green);}
+.orange-text{color:var(--accent-orange);}
+.cyan-text{color:var(--accent-cyan);}
+.red-text{color:var(--accent-red);}
+.pair-row{display:grid !important;grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;gap:10px !important;width:100% !important;max-width:100% !important;}
+.pair-row .form-group{width:100% !important;min-width:0 !important;height:88px !important;}
+.pair-row input{width:100% !important;min-width:0 !important;}
+hr{width:100%;border:none;border-top:1px dashed var(--border-color);margin:16px 0;}
+
+
+/* 泵浦下拉顯示修正：一次只顯示頻率或直徑 */
+.pair-row.pump-visible{
+display:grid !important;
+grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+gap:10px !important;
+width:100% !important;
+max-width:100% !important;
+}
+
+.pair-row.pump-hidden{
+display:none !important;
+}
+
+
+.caes-logo{
+display:block;
+width:min(320px,90%);
+height:auto;
+margin:0 auto 12px auto;
+}
+
+.header h1{
+font-size:28px !important;
+font-weight:800;
+color:#ffffff;
+}
+
+
+.header-row{
+display:flex !important;
+align-items:center !important;
+justify-content:center !important;
+gap:12px !important;
+text-align:center !important;
+}
+
+.caes-logo-inline{
+width:120px;
+height:auto;
+flex-shrink:0;
+}
+
+.header-row h1{
+margin:0;
+font-size:24px !important;
+font-weight:800;
+line-height:1.2;
+color:#fff;
+}
+
+@media (max-width:480px){
+  .caes-logo-inline{
+    width:100px;
+  }
+  .header-row h1{
+    font-size:20px !important;
+  }
+}
+
+
+
+/* 固定頂部正式版：Logo 標題與頁籤永遠固定在手機最上方 */
+html,
+body{
+scroll-padding-top:190px !important;
+}
+
+.app-container{
+overflow:visible !important;
+padding-top:178px !important;
+}
+
+.header{
+position:fixed !important;
+top:10px !important;
+left:10px !important;
+right:10px !important;
+width:auto !important;
+z-index:1000 !important;
+margin:0 !important;
+}
+
+.tabs{
+position:fixed !important;
+top:104px !important;
+left:10px !important;
+right:10px !important;
+width:auto !important;
+z-index:999 !important;
+margin:0 !important;
+}
+
+@media (max-width:480px){
+  .app-container{
+    padding-top:170px !important;
+  }
+
+  .tabs{
+    top:98px !important;
+  }
+}
+
+
+
+/* ── 金鑰鎖定畫面：由授權版合併，公式區樣式不變 ── */
 #auth-overlay {
     position:fixed;inset:0;z-index:99999;
     background:#0a0a0a;
@@ -26,6 +201,8 @@
     width:100%;padding:14px;font-size:18px;text-align:center;
     letter-spacing:3px;background:#0a0a0a;border:1px solid #333;
     border-radius:10px;color:#fff;outline:none;margin-bottom:16px;
+    height:auto;min-height:auto;max-height:none;line-height:normal;
+    -webkit-appearance:auto;appearance:auto;
 }
 #key-input:focus{border-color:#007aff;}
 #unlock-btn{
@@ -33,65 +210,15 @@
     border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;
 }
 #unlock-btn:active{background:#005ecb;}
+#unlock-btn:disabled{opacity:.7;cursor:not-allowed;}
 #auth-msg{color:#ff3b30;font-size:13px;margin-top:12px;min-height:20px;}
 #auth-note{color:#444;font-size:11px;margin-top:16px;line-height:1.5;}
 
-/* ── 主工具 ── */
-:root {
---bg-color: #121212;--card-bg: #1e1e1e;
---accent-blue: #007aff;--accent-green: #34c759;
---accent-orange: #ff9500;--accent-cyan: #4daafc;
---accent-red: #ff3b30;--text-main: #aaaaaa;
---text-highlight: #ffffff;--border-color: #333333;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif; }
-body { background-color: var(--bg-color); color: var(--text-main); padding: 10px; font-size: 15px; }
-.app-container { max-width: 520px; margin: 0 auto; }
-.header { text-align: center; margin: 8px 0 16px; padding: 12px 8px; border: 1px solid var(--border-color); border-radius: 12px; background-color: var(--card-bg); }
-.header h1 { color: var(--text-highlight); font-size: 20px; letter-spacing: 1px; margin-bottom: 4px; }
-.tabs { display: flex; gap: 6px; background-color: var(--card-bg); border-radius: 10px; padding: 6px; margin-bottom: 15px; border: 1px solid var(--border-color); position: sticky; top: 8px; z-index: 10; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-.tabs::-webkit-scrollbar { display: none; }
-.tab-btn { flex: 0 0 auto; padding: 10px 16px; text-align: center; background: none; border: none; color: var(--text-main); font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; }
-.tab-btn.active { background-color: var(--accent-blue); color: var(--text-highlight); }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-.section-card { background-color: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border-color); box-shadow: 0 4px 8px rgba(0,0,0,0.12); }
-.section-title { font-size: 15px; font-weight: bold; color: var(--text-highlight); margin-bottom: 15px; display: flex; align-items: center; }
-.section-title::before { content: ""; display: inline-block; width: 4px; height: 15px; background-color: var(--accent-blue); margin-right: 8px; border-radius: 2px; }
-.section-title.green { color: var(--accent-green); }
-.section-title.green::before { background-color: var(--accent-green); }
-.section-title.orange { color: var(--accent-orange); }
-.section-title.orange::before { background-color: var(--accent-orange); }
-.section-title.cyan { color: var(--accent-cyan); }
-.section-title.cyan::before { background-color: var(--accent-cyan); }
-.section-title.red { color: var(--accent-red); }
-.section-title.red::before { background-color: var(--accent-red); }
-.form-group { margin-bottom: 12px; }
-label { display: block; font-size: 13px; margin-bottom: 5px; color: var(--text-main); }
-.input-wrapper { position: relative; display: flex; align-items: center; }
-input { width: 100%; padding: 12px 42px 12px 12px; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-highlight); font-size: 16px; outline: none; }
-input:focus { border-color: var(--accent-blue); }
-.unit { position: absolute; right: 10px; font-size: 12px; color: #777777; pointer-events: none; }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.result-box { background-color: rgba(255,255,255,0.025); border: 1px dashed var(--border-color); border-radius: 8px; padding: 12px; margin-top: 15px; }
-.result-box.blue { border-color: var(--accent-blue); background-color: rgba(0,122,255,0.08); }
-.result-box.green { border-color: var(--accent-green); background-color: rgba(52,199,89,0.08); }
-.result-box.orange { border-color: var(--accent-orange); background-color: rgba(255,149,0,0.08); }
-.result-box.cyan { border-color: var(--accent-cyan); background-color: rgba(77,170,252,0.08); }
-.result-box.red { border-color: var(--accent-red); background-color: rgba(255,59,48,0.08); }
-.result-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 14px; }
-.result-row:last-child { margin-bottom: 0; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.06); }
-.result-val { font-weight: bold; color: var(--text-highlight); font-size: 16px; text-align: right; }
-.highlight { font-size: 18px; }
-.green-text { color: var(--accent-green); }
-.orange-text { color: var(--accent-orange); }
-.cyan-text { color: var(--accent-cyan); }
-.red-text { color: var(--accent-red); }
 </style>
 </head>
 <body>
 
-<!-- ① 鎖定畫面 -->
+<!-- 金鑰鎖定畫面 -->
 <div id="auth-overlay">
   <div id="auth-box">
     <div style="font-size:40px;margin-bottom:16px;">🔐</div>
@@ -104,46 +231,74 @@ input:focus { border-color: var(--accent-blue); }
   </div>
 </div>
 
-<!-- ② 主工具（預設隱藏） -->
 <div class="app-container" id="main-app" style="display:none;">
-<div class="header"><h1>現場工程計算工具</h1></div>
+
+
+<div class="header header-row">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAcsAAACJCAYAAABD5ROUAAAACXBIWXMAAAsTAAALEwEAmpwYAAAKTWlDQ1BQaG90b3Nob3AgSUNDIHByb2ZpbGUAAHjanVN3WJP3Fj7f92UPVkLY8LGXbIEAIiOsCMgQWaIQkgBhhBASQMWFiApWFBURnEhVxILVCkidiOKgKLhnQYqIWotVXDjuH9yntX167+3t+9f7vOec5/zOec8PgBESJpHmomoAOVKFPDrYH49PSMTJvYACFUjgBCAQ5svCZwXFAADwA3l4fnSwP/wBr28AAgBw1S4kEsfh/4O6UCZXACCRAOAiEucLAZBSAMguVMgUAMgYALBTs2QKAJQAAGx5fEIiAKoNAOz0ST4FANipk9wXANiiHKkIAI0BAJkoRyQCQLsAYFWBUiwCwMIAoKxAIi4EwK4BgFm2MkcCgL0FAHaOWJAPQGAAgJlCLMwAIDgCAEMeE80DIEwDoDDSv+CpX3CFuEgBAMDLlc2XS9IzFLiV0Bp38vDg4iHiwmyxQmEXKRBmCeQinJebIxNI5wNMzgwAABr50cH+OD+Q5+bk4eZm52zv9MWi/mvwbyI+IfHf/ryMAgQAEE7P79pf5eXWA3DHAbB1v2upWwDaVgBo3/ldM9sJoFoK0Hr5i3k4/EAenqFQyDwdHAoLC+0lYqG9MOOLPv8z4W/gi372/EAe/tt68ABxmkCZrcCjg/1xYW52rlKO58sEQjFu9+cj/seFf/2OKdHiNLFcLBWK8ViJuFAiTcd5uVKRRCHJleIS6X8y8R+W/QmTdw0ArIZPwE62B7XLbMB+7gECiw5Y0nYAQH7zLYwaC5EAEGc0Mnn3AACTv/mPQCsBAM2XpOMAALzoGFyolBdMxggAAESggSqwQQcMwRSswA6cwR28wBcCYQZEQAwkwDwQQgbkgBwKoRiWQRlUwDrYBLWwAxqgEZrhELTBMTgN5+ASXIHrcBcGYBiewhi8hgkEQcgIE2EhOogRYo7YIs4IF5mOBCJhSDSSgKQg6YgUUSLFyHKkAqlCapFdSCPyLXIUOY1cQPqQ28ggMor8irxHMZSBslED1AJ1QLmoHxqKxqBz0XQ0D12AlqJr0Rq0Hj2AtqKn0UvodXQAfYqOY4DRMQ5mjNlhXIyHRWCJWBomxxZj5Vg1Vo81Yx1YN3YVG8CeYe8IJAKLgBPsCF6EEMJsgpCQR1hMWEOoJewjtBK6CFcJg4Qxwicik6hPtCV6EvnEeGI6sZBYRqwm7iEeIZ4lXicOE1+TSCQOyZLkTgohJZAySQtJa0jbSC2kU6Q+0hBpnEwm65Btyd7kCLKArCCXkbeQD5BPkvvJw+S3FDrFiOJMCaIkUqSUEko1ZT/lBKWfMkKZoKpRzame1AiqiDqfWkltoHZQL1OHqRM0dZolzZsWQ8ukLaPV0JppZ2n3aC/pdLoJ3YMeRZfQl9Jr6Afp5+mD9HcMDYYNg8dIYigZaxl7GacYtxkvmUymBdOXmchUMNcyG5lnmA+Yb1VYKvYqfBWRyhKVOpVWlX6V56pUVXNVP9V5qgtUq1UPq15WfaZGVbNQ46kJ1Bar1akdVbupNq7OUndSj1DPUV+jvl/9gvpjDbKGhUaghkijVGO3xhmNIRbGMmXxWELWclYD6yxrmE1iW7L57Ex2Bfsbdi97TFNDc6pmrGaRZp3mcc0BDsax4PA52ZxKziHODc57LQMtPy2x1mqtZq1+rTfaetq+2mLtcu0W7eva73VwnUCdLJ31Om0693UJuja6UbqFutt1z+o+02PreekJ9cr1Dund0Uf1bfSj9Rfq79bv0R83MDQINpAZbDE4Y/DMkGPoa5hpuNHwhOGoEctoupHEaKPRSaMnuCbuh2fjNXgXPmasbxxirDTeZdxrPGFiaTLbpMSkxeS+Kc2Ua5pmutG003TMzMgs3KzYrMnsjjnVnGueYb7ZvNv8jYWlRZzFSos2i8eW2pZ8ywWWTZb3rJhWPlZ5VvVW16xJ1lzrLOtt1ldsUBtXmwybOpvLtqitm63Edptt3xTiFI8p0in1U27aMez87ArsmuwG7Tn2YfYl9m32zx3MHBId1jt0O3xydHXMdmxwvOuk4TTDqcSpw+lXZxtnoXOd8zUXpkuQyxKXdpcXU22niqdun3rLleUa7rrStdP1o5u7m9yt2W3U3cw9xX2r+00umxvJXcM970H08PdY4nHM452nm6fC85DnL152Xlle+70eT7OcJp7WMG3I28Rb4L3Le2A6Pj1l+s7pAz7GPgKfep+Hvqa+It89viN+1n6Zfgf8nvs7+sv9j/i/4XnyFvFOBWABwQHlAb2BGoGzA2sDHwSZBKUHNQWNBbsGLww+FUIMCQ1ZH3KTb8AX8hv5YzPcZyya0RXKCJ0VWhv6MMwmTB7WEY6GzwjfEH5vpvlM6cy2CIjgR2yIuB9pGZkX+X0UKSoyqi7qUbRTdHF09yzWrORZ+2e9jvGPqYy5O9tqtnJ2Z6xqbFJsY+ybuIC4qriBeIf4RfGXEnQTJAntieTE2MQ9ieNzAudsmjOc5JpUlnRjruXcorkX5unOy553PFk1WZB8OIWYEpeyP+WDIEJQLxhP5aduTR0T8oSbhU9FvqKNolGxt7hKPJLmnVaV9jjdO31D+miGT0Z1xjMJT1IreZEZkrkj801WRNberM/ZcdktOZSclJyjUg1plrQr1zC3KLdPZisrkw3keeZtyhuTh8r35CP5c/PbFWyFTNGjtFKuUA4WTC+oK3hbGFt4uEi9SFrUM99m/ur5IwuCFny9kLBQuLCz2Lh4WfHgIr9FuxYji1MXdy4xXVK6ZHhp8NJ9y2jLspb9UOJYUlXyannc8o5Sg9KlpUMrglc0lamUycturvRauWMVYZVkVe9ql9VbVn8qF5VfrHCsqK74sEa45uJXTl/VfPV5bdra3kq3yu3rSOuk626s91m/r0q9akHV0IbwDa0b8Y3lG19tSt50oXpq9Y7NtM3KzQM1YTXtW8y2rNvyoTaj9nqdf13LVv2tq7e+2Sba1r/dd3vzDoMdFTve75TsvLUreFdrvUV99W7S7oLdjxpiG7q/5n7duEd3T8Wej3ulewf2Re/ranRvbNyvv7+yCW1SNo0eSDpw5ZuAb9qb7Zp3tXBaKg7CQeXBJ9+mfHvjUOihzsPcw83fmX+39QjrSHkr0jq/dawto22gPaG97+iMo50dXh1Hvrf/fu8x42N1xzWPV56gnSg98fnkgpPjp2Snnp1OPz3Umdx590z8mWtdUV29Z0PPnj8XdO5Mt1/3yfPe549d8Lxw9CL3Ytslt0utPa49R35w/eFIr1tv62X3y+1XPK509E3rO9Hv03/6asDVc9f41y5dn3m978bsG7duJt0cuCW69fh29u0XdwruTNxdeo94r/y+2v3qB/oP6n+0/rFlwG3g+GDAYM/DWQ/vDgmHnv6U/9OH4dJHzEfVI0YjjY+dHx8bDRq98mTOk+GnsqcTz8p+Vv9563Or59/94vtLz1j82PAL+YvPv655qfNy76uprzrHI8cfvM55PfGm/K3O233vuO+638e9H5ko/ED+UPPR+mPHp9BP9z7nfP78L/eE8/sl0p8zAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAER1SURBVHja7L19kBzVlSf6OyV2d2bXH8naPW7keUPK7ZmNiX3vKXvHY8e8/UNZ2BM7A4KuxjLm010lIQH+oKsASUig7ioJSQiBu9rGBgRSlwADtmV1NZaEJ3bszo54hoXxRCcRu2+fPzRK5hkhP63HiWfmze6Glff9kTersrIyqzOzsqqruu8vokPq6srM+3Hu+Z1z7rknCf2IB/5SApgCQAZB5p9uqH+BNX6fGn43QHiL/18DmIm9f6ZDoH0cekkNGHMA0LHjJlMMkkAvY23lfpnrlQZdwqXZfGfskNAVCeF/+/bNChGTGj9lSNljb+iffsnopfZSfxAjVAAKJ0QFgFQTX98etCBLCvyuzn/eBKAJAg3Aw9+SQM58sA18LpRmyWIBN2AGAAPAAggGAA3bbzbEwAp0jRBnHpC4/KoA1oPAdQyr6wQfsiSPvmDETAALYLbueGfssJBjH/zht29VCVAJ7EoCZGesCQA16YkaWYJqY880ACaANwnQU8S0v77+2103vHuTLHf/pQpgpK6UWxBicmTp/Y4Je5LmAKahdPXqXQgPf1sGWAbAGADFq0j8xzCQLH3mghkAqgA7ju23CiNFIHF8eOZBBWBjAFRW0yleHRKJLMEcGWc1mTcAaAS2AKB6/nOPrcpIyh9+6zYZQAaEkQZi5P86gxaBLGt/TZHzuT3WAJsDoP319d/p+Fj3Dlnu/r7KlXEG4K55y9Z1nCy9ZKCDcBxAFcVVQpwHv50BMA5A9R/DxMjS/a8BQglAFffduiqVjUAyuGLmQRlAloAx7tF4VG/iZOn9ThXE5gBUz9/25RUty//mW5+TUgDXFzzSRB5iTJYsG+aHwKq2Y4Pqj64/2ZGxXl6y3PV9CUAehDHUhHkpIlw2snRfWwVwHMWrqyuUJFUAMw1z0j2ydHv20wDKuO82QZoC4Uny2B6Ve5FZELiirstaF8nSWQcmbGVeOn/b1IoytP/Nt8ZkgI0DyKYAKWhcu0CWzldMbqSUfjQ6m+hYLw9Z7vqBDGASQLZRMPuGLB0YAKYBVFC8uv8V+sETMsBm7NAJQoxhR8my7mkCBdx328o0TAQSw4eOTSgpsCm49x97gyzd99HIJk2tv0kyKwGYAli2RnItxrWLZMmfy0B8rN8YnU1krLtLljZJTsF2130Es+/I0mXNcC+oeE1/kubBE3nbgPFmpy07Wbq9+ZzwMgV8SJIrbmRTPrLUY2TptEcDUHj7tim938b7D76ZLRJhHO5Eyx4kS1d7NAClN0arbZFmd8iywZP0UZ79T5bOd0wQCpi8ptJHJCnBDrlmAsejN8jSCbGM4r7b+toqF0iSKCczPBoiAUAfkaXzWRlA6e3byj1vBP7BN3MqH2uZfMash8nSuU8FQOGvRudijXXnyfL+HxRRs0IClOfKIUvnOzqAAiav6W2lfuCEAmAG5M447mmydFDAfbeVBVWsXgwcLUopYtzIcynT/iNLMIIJIHf+1nK1h4myyCNPdrf6kywBwCSw0hujL0fWH50jy/vna1bIkiSz8sjSQRmEEiZ6MDR74DsKwOYBSI1t7guyBIhVcO/ncoI2ViVRKgBmU8Rkr5z0KVk636napDndM/ri97+5WQYwS7Wz1P1Nls64E0EDMPp65uXQY53qEFFOAZhHQ4brKgQhD2ARe0+rvUeUmA/29vsCWTz27IygjlVHlNkVrFsyABbXPn+30guN+ehLmxUAiwg8697XUAGc+0T1utC6OVmy3DmvYOf8IoC8WNY1yACbx95TU4IoBWEKtEWUedj769IK7qbMCTO7vES5JcuJciWPtQSw+U9Urw3FV8mFYXfOZ2qCTEHuuB/aDsPqsBM/dADvuv5m8B/vgfr1XAAUNGRz+Y1Km2HY5nCiDiCNiY3LE2Y58B25cQH49atvwrDue1Zw75gIya5ooizN1I8pcEufmuWvz8OwtX/5R+W3b/1KYZmIcoaHK/kQecKe/R+G9ba/8nrmVK7zZLlzvgg729Vf+JIjSx12yvWbANOx/0/1tto98RcSrzahwK47q/qSfXJkafdhYuNw94nypMT3KJXW4xyJLPl8sDe5YaJj543NhsAjLzrGiQyw9XBq/SZHlgCQw71jFUErK5Uo+Zns5MlS5wb3m1yezfPZg756Ze3xHTL3/GQA6xkxBYDaQbIEwCpv3/rVrhmCH33p9izPNUEHyNKgWv1tu97rf/7MC75jrXznRoXsY2wKA7uS6w+1g2QJAC0Js32y3Kk1C3JyZGnCPl+3AKCK/Z/qvEc28T2F16Qdg2dTOyGyBMBymLi2u4r9wMlZXt8VbZKlAcI0gCp23mDEbs8jL0ggT3ms9sgSANK4d0wT9LJy8MGje4tUy8JMjCw1AMcBpp3PHTDabeMVx7erAEZALGOX1UuULAGgK4RpE6XtUSZIlgbApgnQ/q/PPK+328Z/d/IGlcBGuC6TkyRL7ulWXhs5nUuWLHdqEoLO57VPllUAczjwqXCEUjxjey4pvqCIAbDsEO2DI/EJdvIVmRsCdjm+5MhSx8S13fMuD5zMw662EcKDDyRLA0AJ99+QPMkf/oZqRyaY2iZZmgCGce+YAYGVQJRZADN1YmmLLE0AFYBNv53b3zH5WPvsvYptAPIz5cmQJYhY4ee3PF7uIFFmAMw2tSM+WVZBmP6vn3muY8brH53cpPBSexlyF1NpjywBoPTayOliMmRpE6V/SC8+WXJhxjQOfNJfmB/8jxLsPUgFxDYATAYxGcQJklxkSW7SZIat7NkCUkzDzhuiT+DkmSyvYasmQJbAxLXdKQhx4KQCe58SbZBlGcRKuP+Gznr2h5/PA5jkr0yKQ5YAoOHesbSgmv7GB57ZqwKYJ3ITSzyyBFBKAeW3cw+Z3Wr/2mfvlQDkQayh0k0bZGn+/JbHL+8QUSpoSPpriyw1gOX+6w3Pdc1g/djJ6+2xBj/P3z5ZmgS27tWRM2YSZDnfTBqxydIEMA1CGQc+2SzMu78vgVjGCXM0kaFDkCk43iRAViNxwvJcY9neK7E5kFWNVEKteIZ7QQH97yWyPHBS4kQpxyRLE8Aodn1G65qWfPR5mVu4SkyyBMBKuDdbFJTTt0Qpc7mV2iRLDYTcO7mHli3SsPa5eyQeNcm3SZYAkP75LY8nuhY/8tLtUqpBR8QmS4OA3P99w7Paco11jTS5gRKXLPl30q+OnGnoS/SjI/YepZpQ/yoA1uHgJ4tNRLnrBwp2/WAGwK9gx9EzNSVJ3Bsl1uB22/9a9YVVI0w0Eqt9nwzsCiDn8NjxGXy5Iocjy6s1FK9OA0jDTmqJg+4sXoZJxD+PZgJId5UoAeC+Ww17bFmljbtM4rGKIminbzGL9o8sFN7Z/FB6OYkSAM7f9mXz/G1fLgAYtr2unhxruc17VAAMLydRAsCPrj9p/uj6k0UA62DnurSDJo6L5t3s0Kb4QXtfzRzBs9QBFHDwqubB3TmvgtgkiB/5qBEi9whrxGg1kmBDCNZCgwcKBns/0/J6lx7P06oQsRLL3x5+gRXPFOEqAxXSs6xg4trObtjvP6kCmG8dYg30LB2i1Jd1GT/6HE8ei+xZ2jJ2b3YYAv3mVU7BdU47qmdJYCYB6Xc279N7sX9XPFcoEjDZC57lR166PQ9gKhWoy5f0LE2AFX58w/FKL471x2dHM9zRkmJ4loVXR86U45HlDi0Lu44o2iTLEg5eVfTxWCUAUyCWbSQ+eAgvIAzb9LvVTKDev3l+J06gRKxMZJUu3X2nGZIwFZ5urYQgSxNgw5i4trMW7/6T59CUlBSKLHuDKOuEOY+lXhnm1y+7TwXcky2vKDbZvpCBnStg4PCGykrq2gee2afy402ISZY6gPQvNu81e7mfH36uoACYrynx8GS57ue3PJ6I3hh6casCwiJr2NuLRJYmgPSPb6jovTzWH58dlQE2C/sIShSyHH515IwenSx3LCgAW2x9xZJkaQIY9fUmd2gZELcAUm5PMoAMW+9T6iBmNu9TMgCWWvcqnWscorQ9THL+T5ZBYLnffOnz4S254ulGz9ufLHOY2NhZJbd/tgiwyQCvcQmyRBq7NvVOuOjR5yQ0JZOFJksTwDDuyRpYCbCJcrbB8Dy8obhCiFICsAgwOSZZ9gVRughTcs49hyRL7ee3PJ5Y4trQi1sXQTaBxCBLnQi5XifKOmFmJABTDCwbMsHHeG3k9Lom+zwEUTYKcTyy1AGkcfAq0+fetjfp9SQb9hvdIVeH6JjOf97kBBn+mMijzykgpgDWeqSYClgKNXiWDQRa/s0XvxS+ikbpdAb2u/VkzzhoAAqY2NhZAds/K/P5kmKQZQm7NvWe8n30Od4n1z5WOLIEgAruyfZ/dZ/tCxKAc2jcyzMBrMPhDWa/d+8Dz+zj4dfGuQxJln1FlHXCzEsAZhh5j981kaVJxNI/v+XxRHTH0Itb87betUOTEcnSADD8k89W+k7m/nh2ZIZ4TYAlyDL92shpLQ5ZNgpxdLKs4OGrcgEkPA8wpWnvkQK9SzuDFaiieHVik0XlZyT7QLE1QsQyIMsWDrI9zRRZWorY6D/dVQj/zNJppX4EAgYmrumOd7N/dhbu1xaFJ0sNuzb17pGLR59r9KrCkyUAlsY9OQ39jO0LRbirZK0g7/Lyp/cpKfI/3hSCLHWA9R1RurH2+bynsEsDWZoARt++9auJyO/Qi9u40cWkGGRpAiz9k8/2h0fp72VeVwQwGVDBx0wRK7w2crriyxNLEKXKQ2CISZb+RLl9QQHxcz2+4Va49yk1gB0HUMXeP+v4gljz1a9LBORB1jiRJaWIgWBhDVk6EUv/w5339e6i3D+7xHwFkqUJYBi7Nhk9LenuhJ9oZKnhnlz/nr309ypXjHd5+dP75lPk7EtHIkvT9ihLfau8XYSp8gP2CsBksiNRC7DrwyY2t0MvbqsTc3SyHP7JZ2f6fqw/PnudTOScFGAKN7h0ANOvZ04F6kBqQZQS/M7ohSfLCh5OL02UtcQdryeJCsiaxr7/sGyT88+/Np1PEZtMkSWlbG9TJ7LSv75jZ28qpv2zrtfpRCLLAnZtKve8lNv7l+fqshOaLAFgFPfkqivMq3RQxuENhX7s2uVP78sDmEoFZI4vQZajv9hc6s85XQase2GbnCKcc6+RsGQJoPDTzx4rr+bxa3XOMo/452+CiRIeovSGXG2Lah0e+tPcchIlAPzPL4yXU2StS8Eqk50lqxCxeenIQakHiTKLeO+d0/qCKAHw4hFx9x+n+nKF2l7l+BLfymP7gtxvXbv86YekJYyAVigLooyMuGNdXe1EGewn7liQ0fQus9CepYZD6XTAop8H8coszfuUBoAc9n9Ki9SDAydVe9+TXQkwBSkmAZbic0zEBCydJwktEE8QYuNbjTCPed9Tj6hE1gyBySBLJ1jpX23d0xse5v5ZTxQgkmc5jN2b+iu08uhz8yBeRza8ZwkAJdyTK64wr7JuoB7e0FeJTJc//RDvW/21TCE9S/3ilqI4QxvRqwRwrmGcQ3iWAEwirPvpZ4+Zq30ML2thgcTxngwAowF/m7WJEn4VdcoASqHeKrLvZZlX3xmxC2979jsRePZSAjHVznKFam+iM6S+8qQOsjQCO/6bL30hkDR+fccO7f1HDg6D2CyBqSliU214OUkjbhSg0ndEaUchcoATToqEcUzNlFHI9cfCD+dVOshi+0IJhzcY/dC1y59+SG7D0xHvLo0j+/FQEERpIxXgVWZj3m8Uh9JmgHWsckXnIjSYIKRx4JOFlkS595SEvd/NYt93FwF2DmBTAFNr1Xe81Xqc5zjHTFyJQ+7zlNxaVQDkQVi87PGvzv/zr00H9v3dbbtMc+vudIpYhYhlf+fYZHbZZ9D2KuMsBBNAX+5z4d7PGQBKMa6U2lDQy4GoRmsf9Y3itrV0cUtRh0BUxNFV2s9uPFYRQxdElvEXXAGH0roPUSqw3yThJUodwDoc+KQWvCxOS9h7ugjgHC9aoPiew/SSsPf4CZjm+ql9l/j36gRqqURs5ref+PK59zzxmBrUrF/evieXAqukwKaumHlQXuY5nIoZBZjG7k39bDGWOeFH98KnZuSe7529B5mPrBD7YO/y8qf3qzGVt8HnXSAC5BfvyMbUESUxenVc5vEqJdTeTxkJOg6lg4R4plbPFXBK7ldg14YNVnbFM0U7lZpJDYXRya9QOjN4YQL+tnNm4r5bfUnYHY1f89UnVP6y1vVETE0RlBQxpMBkIjb/3icfqRJZuV/fcX9TO//fLcXcFTMPguwyd8tzLGF/lUcBWHSls/vTxb6W3Hs/Z+KxZwuw36kax8AY7QOvMu51uZXZN8pd3DJpQiAqRmJ6lZoYOpf0ecgyj8CswZYJPsM4pPp5lXkQv1/d46vg4FXBi3nyjMq9SLlezs7nLCasKghzANOw6zNGEoPxW1+fklLEMimyxghMJbJAdtm7UXPbbt/Qz9rK7kWQVTo/9nB1GciS101lIeer9r0cdn96ZYRXHnt2kYfSG/sZlNhUT3BIo7C5N5WB7R2ea+MOwzi8Qe/FrklP78+Qz0uGQyT4aBe3TIr3lMbzLBkxe1wjJPiM/uzGo1UxekGeJTAW4x6VAKKUahZkfX9wCaJ8ZQpkv/et8bVbtevrFXw6EEL8758vmLBfN1N531OPyERsksCyRGz+Xz+zL/13t+9p7idZo7xQb3cFa39VRbxXpWkrhihtFFArxBDZu+lVy7ndvcepZYt2hGtb3HkWiE6UcXSEIYiyGSkXuSmId04vKK6dBzWcp9R9q/kAwMT3JEx8b9F5QarHkzRBKIOwDg+MjmL39RXsvr7joZhf37HDeHfb/TkQGyZYegpsfuBosWl8zo89bDBYx9c+e1+2qzPHYoUfW81Xf+Lez2kxSU/F1LFsz/Vne1sJdvW+bV9Qe61r0tP784iRtc2AysUtkzoE4iCOThdE2ZIs4+1VVnBINXz/Qhh3hQKNQEt34nsKgEVQU/KOyRX7Ojw4UsADGWM5Bsjc+oD+d1v3pInYdIqs+SuO7Wla7O+MHS6DrA1da9RD1SziHRWpYventRUox3H36Hoxe3Syx+6TEFEekGK2yYRINGlr6GNcsyCGrTVZxtkE9hfiHQtZAJIrhDqKh32SeSb+QgEwD2JyY3YrqwBYhz3XFrHnOrMXBurilsliCqxAZM362wbsuF3fsdNEOSchdiiLVmYo694xA3b4PCpkTB0r9pBXqSTgVfaqd5mPqbin/9uWCQMCcXFlTANFwJcs7f3FqO66HuhVAiOu8GsJD1+l+xClDLD5eqgW/FVeLI2Ja3OYuLbnJuydzfsq/8u/+qm+trKrScG+fduURrC6oZziKp0ydl+/kpVOIeYiH8fUMalH+pB0Sb6e8C6lpw/IbXiVZaGm24IshiAZXFazQmNYfAFepQRiGdc+ZdGHKCXYGXGSXVQAALEyCCVMbGyp8DadGlZ4eyVfAgf0ExsXEyeFTaeGeZt/Ovf//NO69WuP75DOjz3S0FaiS3qHvUoZ8QsQrOxQ1r1jJh47Ph1DKUv8RdnL63XbXmDSxpbtXR7eoPWpEVD4b1smhJfTHuLowhH0bvLbspNlnP22qu+nxDLcS7TfZuEPXmCgluKfw+Q1lSUIchz2vuqSXsCmU8Mm6q+4qbZLnptODWfsNkMCkANYhZGV9Vq9KYL2ey/clfnbm5+odmi+4pYhnO5GUlQPoAw7ozuqNZ3H1NFpFLYsp+c92cH7Lpvik44cUBEvH8L45e0TFaGi28ZbMa7JQGQfN8HZs1QiXqfjkGoGWyX8Rc0Hr9J8vMo8wDL14uYYRvHqSgBJqZtODc/DLhKejUAUEp/wKQDnNp0aPrfp1PDMplPD2U2nhkMr0k2nhpVNp4Zn614wtBMbF43zY4+YRFZT///25q+ZqVqJvcS9SgVxq57svr64KqT53jETYHE96OV7K0lnvEq3d5ldxlkR9V+XF3GMZPmjL22ZEkPn71lGXahzwX9yarb6hGkn/kICmFP6zgSQRvFq3YekJK68vIvc8RYNV3hB4mS/HsHhWZnfK8vvb/B7vQU7dGt6vruek62XWGuKmIFpH34ur7x9W7mh/WtgdWquxPm0UISZreCxyngMAzCDqaMqCluWwwub7ML9u+6lSUcOZGMaAdovb5/QIJAE9JjX5T/60mYJQOFnN4pC6jZZ2sk9yUzA/fOy/XYPaL5eZa2OqdWKKBXuyckugjwOO5waNGlVz/VjAWTnJc9IC/jExsVan965bcpY+/x4xjsWRCz5WXpoLq7nYQJQcOCk4lC8x7Dhjfb5zAvyrYITfE3gOPB3lu64uZPKMFahAiJMsm6HLDvrVdblfftCFoc3dJswJ9uYv1i44tgetWa0c1kluF/z5ZZW5iPPzFfGmeceAMAcGWd1mfd+p74OGu/j+p7BCNr5W8tGJybAuOkpTX7xDhPxtm+yRMj+/jc3VwnsTXc/yEcHpFqMq91n5lI1/DNq1klOlSGqjVn9OylyPm8cV2qq0tXcHgamE2C+MToXa41fhniHVgOsFSbz0Tju41XKAMvyfcpCAFFmUa/1qQEouQkqDE5sXNR5+wo85Jrh5Km0KXdN4b0UWT4CaBm//83Nyk8/e0xPUObjFiCQ0KtnCR95wQShhO03lzvgXWr4ckWLQUIqlY9mWX5Lpatj0b3ndK1f0pGDRdsojWw8Vn55+0TotfOhYxOOcazaa5yhH7H2+bwGsNz5W6c7QZpVtHckKYN4+849iY/PXgciaLAjpNXXMy+HGvNUrKcFFyJwrLqqD5FyomRlvz1KVxKNCWD0xMbFdFSi9CFO48TGxfKJjYvDANbB3gepIHqGWMW/Lc37lj+78ZieIktObGb3zWWxMtO/JQBTOPzCTIfu3/uFCuy9RLVLT5O7tXcpHTkoocNZ279zrKh+6NjkPECLsI9TKX2+HlQAi2ufH+9EP6Yh4DfeUwA794nqtTOfqG5cUsemYizW1lYfsSoOftL0IdIx++0gzYuBe4Az/N7rTmxcrCY9Mpw4Kyc2LuZObFxcB+By2FWFcrxNzo/ms4B9w0IpYpK/zWAlI/D72ilA0DfI4vA3krda78kaMT0pmcrPFLvU9/Euj3VXDAHWRtb2L29vXYBg4GhRGjhanAXDfBcNjW4akIkbj8ZNT+kQR0Fa6yDg3CeqG6eS9izNFkS5AbXYtnuJfk8BmAyggOLVftfPcG8v3WJfMmnyNE9sXNQ4gRZPbFws8nCFdwHmgtpEdp+aP09u3zIfU+n0GzplEBR42cTIJEblZzo77vZeZbe9IRnbFzKdfMD7jxyUEf09nGAhChDw2sznsIJCgj5Q1j5/dyciADmIyjyt/Twg/ydz1yz+ydw1vmv/smSfxpM3mmBlQNBRvLrq41WqsMOMw2GIkifwKKhnrUqoZ8Q2GFT8x2xFeK77+ll1lVZeboqs9f4WSAIZsftelu33ea4KyDj8DRnbbzES9i5NfHkmZqECdLpQwdgyjfU4OlsoO57hw1D45dY9ZjBRlhSAza8S43EDEt5fPnfzEWPdC9tKWPmRqraNFQDz/8fc1elXR86Y7XqWS0H3oez1CI6bj7UiM37Wsbjp1PD8plPDDPaZyxmuzDKobez7esBzAAohvdVZz330VsryIy9sU1JoTvD5X799s5QCe38C4zgJkLSKhFTu0H3LiFfFJE/lZzrTpmTeLBIXKn9+J7xKNabXp//d1j2V1kSJ1UKUHVsL524+UsYyHCHqQw/TIUypc54lGLD/T01/S50FWbOmN3mG72FmEb0ai8YJMlLVnk2nhmfQGH41YScZBZIsERsDsYVmb5MpbWfk7XtZWUZlulwwO3LXe3ImvjxTQry9oBl05r2QmWUe6yyAYgfum/hRkQ8e3SsBbGYVEWXn1gKAszcdyQ29uA2rUL9E9jCZvf5HO+NZUtDnDCheEyQAb7lJkhPXOb7wliJKg1tKowAu5xm05RhEmfUIarrVPYZe3CqBWJZ8vGgCU1LE3m1zJFdbqMTE9lv0jt39nlwF8Q5nq1R+Ru1Ai8aWebwTf/77jxzMImYBgl9t3aO18vDR/5muUdHRV2SdvelIDqJAfSij9k/mrs50yrOcCyDRQEV1YuNiuUXFHj9y1LgwaQnUfA0iytaKlViewCSAaT6e5XqAvRW7UftezmDlZfkthW6ktscqVMDlcjixVtgh0OVW/jK2L8g4vMFI8J6Jl7X74NG9MnrznHCnvcpqpx9y9qanCx956fYF1GteCwSv/6rjWUZdMMELPRWUeRjsafHzlecCiNIRnBzsIyXr+NGPSjtEuenUsMRrvkYmyqGXbpcJbJyIVf3LQFlqm/VhV5tXqXfFyr0np8VUQgqVn84m2JJeMYQyyXmVDxcRb5+t8qutDxodIOB+RuH8rV8xuvGgv7nxmSrs8+cVwYnBhuW/n/vzbFyybGGFsIAFw/QA0ppCvUh5wyKCvWd4+YmNi6PtkqPnmSrsJKFMZI8SAAEzBCaRjxf9705+RkkRkwmWHqtx+76bx+p6/5wOII3tt5jdUkRxvSYqP52U9b2+R8Z+QxI3ef+RhyXEL0Cw1HxksLqQO3/rdFeJ629ufMb82Y3P5FykaULAizHADsNGH5ydmopDqubDJJo/wzA/0vKGQA3Y4bhKJ85acg923Mey17BEMo+Dj750+xTAVCJm/OSzM5Xm7rMxggWyiy9EJUoJ8V+Qq/eZ8BkA5rD95mpXn3pPzsDUTBnRzwHK/JpiAq1QesViTug+sQsQ/Grrg4Fr7gPP7M2gvfBgP62LOQDVDpW6C4Wf3fiMATuCl/voS1tULqdXYmXsF0tt9kP993N/Ll2Gwxt0bF+Is+B9iJEZKJ5RUbxaa0WWHqI0YNeATdSicp3HHIH/20hMANO8GMGSGHrp9izA8imyQOT/GiiClSFi+KvR2TiLNB9X6eCB0SIEwqKEaK97czBO5afLLL+1XUOuV5RP2+1431MPyzEMD2fNlzvh+TLAIKDwzuaHqkLU4xLnUQ0rrOLPH8+OSHakgk3F1LOqk+CjR1w8G3yFvfTnBopnFB/P0sT+WQkPjJqbTg0XubIyOUkutWgcr1AJsBbdVoNTpEBdwuKcBlAO68EOvXR7loAZIgYipv/4hkoTsX/s5PVZskOw0YVs33flNrzKsljeEVDImZiKXahgCu2/Z1FaQaMZtzRb6VdbH1hq7cUhc52B0hc27zWFoAu48VejcyaAysdnr9MR78yuknKRZSSWDfyLX6m3BzIawJwXL0/y5w2HIUoA4FV0KpwcRvg95vnPLP/dXaTAa8Vq3KNI833QYmiifHFrFsCMHV61ALBcQL8neQg2jlcZ/3zaAxmhGKITZhHxChVkqfy0LAYQeN9TD6uIl6yk/2rrA5W2dEwwRn8hiFKgBd4YfVlHvNyFDY5n+WZk63inlsEhtRqKLO3Ppf/+m3819VuX/WPlxMbFyNY5T/Cp+HidQYvKaDcp6CMvbpsCWXkCAxEDgZV+fMPxJjL82OxoNgUm29+x5iJ6lSriHRA28ECmIsQ/NuIVKiDWqUIF/YZeexl59Reb9xpiWgRCEGblE9Xrwpzjb4BDllqMZ47ANxWfadj33Sz2XFvxKJnKP/7Py2dPZf7P4SQ73u5rvPwgv3iXTLBmCZZiE6UFIlb98Q3Hiz5EKREwBVggWOZ/ypyK2p7Ez6cJhFHZmyuYOjaGOO+8nD6isvFtceXOQG9kPMf2wN731KEs4r07UjO3PqB1qD9zQqgFoshiVCfFDsMe3qDHWDwZ7NSkpk8nrjXhUzMVuzYZ839z2xwOfTPbyyP4ey/clQesxRQshe9RIkVMDwq/2kdJLMkmVKsa6WF7v5tBzKoneDCjCXlPxLvsplcF9E6GZqx2vO+pQ1J8A486aeAJr1IgCiIXjnGXu6tGvFYKZGZiBvZXm0ng/huKABvHIy/2HGH+7je+oP7eC5+fJ2JTKTAJdkgV/Mxk+sc3HG8yJv54djRLYBkiCymyQGBRK9H0WihrtXmXGmIWKkhNH4krwws90vuY7aB8TM+4Ym7dLQhNoG+RajOM4X8Y+cFMFbDGAog0B7ApHH6+2AsD8OHn75Z/9xtfnCHCPIGpKZ7Iw/cpNSKkf3xDxY8oFQKbchGl9urIK+Gt9b2xCxBU8GBGF6KbHGXGvG4yNX1EinFdtUf6Hbkd73vqEQmdK0DQLhQhygIRELk4SJ0sD2+oInooVsZOLe9PiljAgROZps933KSDWBrExvHoc4t47Li6LCT5XF5d+/z4LMDOEViWYJNeCswhyspPPjvjS5Qfmx2VAMwClmR7nwwUJaS3t60CBCUh54l6lwbiHb+REeeMoV2PVVvmXut86yUq4p5Rmza37o6qW6KO0ZgQZoEw+PjsdRKiV4cyUglYvZO+e5e7r6+A2CQOfrv5b/YbJtIgSwaxeUzNzFD5aMctwyue3S6vffbe4trnCueY7UlmePIOUsRge5XMBFjup5895ru/8rGT10sEzBMs2b7O9ip/OPJKlMWdj6t08OCIIcQ9cZQQL+FlPKZ3udwGT+TC9e998hEZcbO2WSxjJKqcKx86NqEKURYIgUyMa95MJbCIg70kwjRSzP9ND/fdpgMsDTADYFmALdL0kcXU9FP5NV95Uk5qVNZW7lfXHt85dcXx7YsEdg7EJu0atna4NcX3JlOwAGJVAMM/u/FYJYgoQWyewBRX+DXauO0VBQh6z7vcYiLem08kxNl3PrxBW0bvUsfhDZUY18UuQGBui+xVAvH2VIV3KRDOwYsOrfkNlDsW5uGbockcAgwAS+NQulkBHHppHsQM7LjJPxNu6phEZE0CLG9nn1rgyTUGiGlE1lspsrQUMfOf7iroQU//4NG9zn6jmiLryhSYwshS7HOfFhjVigoAZNkEmbJJMkWWkYKVO3vT04EK7I9OflomsNkUWQrIwhq6xBOAUP3hyCuj4cny1CzAMi6Dwn+c3b/b38nhwZGKkPPOgcpHzwGQfeeg9iXmN23D1vg2PdLDti8osAv6dxvDUUOw733yERXAPJF3PBiaP2sQa83ctivWmdQPPLNXJsI5+16s6RkEgIj5PXudOG8pEISPz16XBTDjK8tcpoj/7vwlBWb8cOSVdZcFhIjihDNmsHN+GIfSjVYksQLAFnH4G8D2W5oJs7DZZEAhNX1kjohNgphKYAAxGbCyfD9wksDwnicfRf3co1X7f6pGgszZPwQjhjpRMr7gXERpX28QsdK5m55qSUJ/dHKTQmDzREwC90L5c0xEOe+491QmVgiAwcAeQZRdQLxCBbZ3GY0U7JrMuTY8tlg+dBt7lXHHMxZ+efuE8cGje3VETNwhu/bnqBBlgQS9yqpNml48EjtEJPsuKjuhpwBiWTz6XKBisMa3aZfuviMNsDSIaQDfR+T7gjWColo1nfr/CUiBcS/RJkhwcmSww6yoeazMJGIVIqT/9uavrzNuerIlCQ1/5zN5gC0S8WSe+j4lAOR+OPJKuBDT3lNyG4pRFCDoAlh+SyWm7Kup6aeiG0F2OLRbRlAFhzeUo1703icPFxEv07RqbtultdnmyKFxAjJXHNujCmkW8OKPZ0eKAMlx5dA/qLpjQUXTW+WXDMPWrddD6eZF+ehzsyCWASwNxEZxT64lyfyzr31FThHLpMgaS8FSHBJMpThRkVUjR8e7XOMKs6Lx/wbANJA1R2Da27d+ZUmCG/7OjTJgzaTIUmueKF2qETeA8g9HXgmXDr/3lMTHU2kKGy0dhtWwZ0SUV+sSqHxUBdh84Jz4h2EBMBPAOmv8DjPyQ7cveF9X1wmijGxwvffJwzKARYBJABAxDLvO3LbLaKfRHzy6VwJwjvjzw4RhU/b/9Xc27xsW0izgIkoZwCIBkr/cBoZhtddGzqRbUl/z3mVosgQIOTycbrSYH3tWAtg87H1Eg4jlWH6LFm7RPirBTqpRiaz3EzGFE5icIiZzAjOImFEnR+stRkwnWPr5zz0WadH+7yduzKeITabIklK4VAv7pugS93Ch/XDklfAEtveURxlGIsth7BnRhbh3kzCfmUVDuDwUWQJA1Rq/I14IcPtCFp0JyRbieJScLBfhKmsXgSzL727blci5yg8e3VsksMmIZAmAld7Z/FBRSLMAAHx8NjPPwFQKlNtAsky/NnJGW4osZcDeYI9BliaANB5ONyr5L8/Y2aTEFDsblZUBVopljXcA//bbt2RTZE2uISYTLmFNbW+UE6UdftUBpMOHX0/P2Nm+gWPViiwr2HOdCMF2nyz9ZX9psgSAgjV+Ryxy4kk/U4iXM+CFDiAXc48S733y8BRq50gjkaUJYN2723YlsqY/eHSvRGDnwD2CCGQJAOl3Nj+kCYle9URZBDDJUCfCkGRZ8ypbk6VNmEXUNkQjkSVfNCyNh69qXKxTRxUiNg+yJJ6gY4LYNBEr/+aLX1gW0vzDb30uS2RNroFle6nkJkebMO3s18hEyb0FttRY+f3NBDCMPdcZQtyXhTCbZT8cWYKIDV+6+8740QDbyxxHvL1CA0Ap5vEQhygzsF99hxhkWXp3265EPbqBoyU+F5HJ0gRh3Tu5h0wh0auVKEdVZ1slKlkCSL/KvcqlydImzIZQTASyBN/HKeDhqxoWLk0fkXh2qQInWYaYSWRNp4hV/sfnxztOEH/wzc0ykTVOsDJETF6DS7VkIudYiGefMhpRlk7PgJzQayyyLGDPdWUh7stGlhL3LqUYZGkCGL50953tybHtaTpvRlGW8CI1AMfjepJ1onxU4cpFikGWBoDhpLxKF1nyuWBSRLIECDqAtCDMVUmUCoB5R24ikqX2qsurDEuWCuxN/jhk6fyew8FGwlzzlSclEJslMBVOuJNX0VlDlp4idhxg1b+/c3tixPmRF7cpRFaGwEZSZNmFBVBPDqp5lQ37lBZSsCoEVohElEAWAckPIchSw57rRFLP8hNmc2QgHFk6BJa+dPedySnp7Qtq02d2gYNEYBOl8xZ5hhhkOfrutl3VTszFwNFSHvaxkKhkCQKq53MPieMkqwgfmx1VUh5ZjkiW614dOWNEI0ubMOuCGo8sATtFvoCDVzUoj8sef3wKYPkUr6ZTOyZCtfOUBoFpRNabKbL0FMG4uGViSQJd+/y4SrAkToobUmQpa2BJVMuevWTXgeWe5Bqnko8r/Mr/X3h15Ew4D690WoI76zUeWZoQ4dceIsynGxPdwpNlZwizQ3jPk49KAObJL2M7HFlW3922q6OENHC0uOisrYhkCQIqb+ceEvv/q4QoAcynatGRaGQJoPzayOmmBDUK3YIdmsdbikyWjvLI4WDjPuY/+9q0miI2kyJLXlN/2XKt8ABqXh+reYK8EIEGugQQA7P3FmWQJcNVuKDuLVr1PciUy6N03c/Zq+T7lDqRlftPI6fDhbWKp1UAsyBX+CoeWY5iz3VVIfI9Q5ayHVnh8xqNLLnMs/Slu+/qWcJ8zxOPKiDbCic/GV2aLE0A697ddn9H+zhwtMijXLHIEuA5B2/n9ptCslcoUZ68XgHZ2wgpj/yGJEsDwPBrI6fNdsjS9pooaO8kFFnWfDAcvKro/uC3n5iSUrDyKWKTTt3W2suX0Ux8RI3nKZmrqg9zSK8W1r1U+1vK9Tc3Ua6pk6RJsKbfGH25GI4kz0iwkw/yTX2NTpZl7LlWvKuy9wgzC+dYR3SyhF3/GKOX7r5L77W+vecJHnrlRl5Mshx9d9v9XTHwBo4WiwAmY5IlAOgMyJ3P7deFZK84oswCmLJlmSEmWaZfGzmt+eqBSK3ZoUkgJ+mhLbJ0vMwCDl7V0LD3PnlYJrImiaws1UKj3hCtXY3HJsqAuq9N5Ook7LTap2QVAiu8MVoNZ3kWz2Rgp/rLvn2NRpZV7LlW7Kv0LmHaZy/jkaXtfREKl750V6V3iPKxvHd7JQZZVt7ddn9Xw5sDR4vzBKgxyRKMv1/zfG5/RUj2iiBJievhbF2Io5MlgNLrmVOBThJFbtlOzbZEmwgzMlk636napPlJw/2pdOSgna1KVjZFlpRyVeyBq3wd4+RYL2fnZLDyzFabBN3JOnyf0v4hWEaKrOMEq/yj60+GJUnV9iaXKNoQnix1AGnsuVaEh3qXLHlkhSmxyJIa5D136UufX7a5/pdPPCYTMEOA6pXbiGSpA0j/+o77u9qXgaNFiYBzdq3mWGTZMBfncwfEuutT/NHJT6sAZghMbtSpkclSez1zqmVSJcVqoS9hxiZLdwLQNA58UvdZHJk1ZI2kyMoATHLCr8wVjiXuYaZcHuQa1D1JTxjXSBHTUmTN6Z/+ZvjwkS9JtkmWgA4SRNknhFnbD2mDLG0vEyhc+tLnu+7Z/MsnHisCGKdaH2KTpQmw4V/fcb+xHHPxO8cmFaq9tSU2WToe/zSA8vmsIM3+IclNsq2L7YIv1MQ/kcjSANjw65lTZvJk6UuYbZOlAw1gx3HgU76KZG1ltwKyVMBaz8iSiSwVriSgepi1VnHHTNnJOnoKdkbtf/nMN/TQ/Zx8ReKv1BoP3q+NTZa2RzkhiLJvCHP6SAbAbJtk6cAgoPSbLpDmbz8xleVl4+Ta/kx7ZDn86zt26ss5Fx86NpmF52hPDLJ0F1HhpHlQrMeeJcnPNJBkTTbjk6UJIP165rtLyjK11fIGwkyMLN0WXxXAHPZ/KpT397vf+IKSIialiBnGTU/Et3gnvyfZ3iMbAZCpHYZeqh/RyFIQZf8SZpaa6rjGIkvnY4OHBKd/86UvJOap/dbXpxQAY2QXx5DIm8wQnyxzv75jZ6UX5uJDxybycL3tqA2y5L8zE0AVhLnzYw9XhbT3BpTv3JABMJYiZGqvW0yELDH8eublUEYftd2LnZrEK34oCZOl+3PT9jixAEDD/k8lb9FOfE+1CRIbQE6YlUXrR3iyrALICaLsX6Smj3CvJhGydH/HIc4FAPpvvvjF0OT5L74+LcMuFr2eG3mym+QSIsvcr+/YUemlufjQsYnaiwoSIEuvt1kFsMAA/Z2xQ7qQ/G6R440KgSkANjA7sicBQIqABMky93rm5dCyTIn0bOe8xBVHpkNk6XedBsAA4S3upZkATDz0p/4CvecvJAAKv6fMf9ZzhaL4j0pHyLKMiY3ieMiKI8zEyBK+r2njISMivOn6zgZ+iURULyZAAR5hAmTZc0TpIswpAPmEybLhGtdZTRMAGLGFhhs21hWtfeZ3n4b2BBxjaBx7n8zfAD1FtTmv94cYa76GbAJJBekylwdG3mf4PDvVYlyJ38Pdr8bjP7gSfIsgxZ0VcpGcu88JkWUkokyOLOukWQQw2SWybPEdj7KhKK/E6hhZmgAKmNjYk8pGoF3C7ChZNikvt2L0Kq8OkWXu7+/c0dOy+6FjE9kU2EyHybJ+tTPPgiyTIMv6fTzPTJIsAZgENvrG6Mta5LWeqLQeShcBpO1QkoALOoC0IMqVB2t8WwVgOcfbWIEwAYz2OlECwC82760AWMlzIdAeDADpOESZvGfp4P55CUFVbVafZ1nCxDVFIacr3cN8SgFPdltBnqVhE+V2vZ/m4opjexSAzQKQhWcpPEvn5RQMbPSvRudiG1LUUam9/wcqgBkQ5FVIljqAHCav6StFI9AWYUoAZomYugLIsgog9/d3bu9LL+2KYw9KXPdkBFmuerIsvTFabdthoa5I7q4fFGG/zFZaBWRpAihg8poKBFYl1nzlybwdWXGdQe4fsjQBlP7+zvvKK2Eurph5MMOrFUmCLFcXWZJ9jjn3xuislogx3BWJtYumrwNQwsre2ykBWCeIcnXj0t13lgEMwz7u1E+oAhheKUQJAO/kHqqSrXvEmlxdKDFgOCmi7J5n2ehlSgDydU+z7z1LE8A0wMooXmMKGRXweJkZgE3VtyJ60rPUQSj8w533aSt5Lj4884AKYJLBc45aeJYrybOsACj96PqTRtLyQ8smuTZpZgE23ryn2RdkqdskiSqKVwuSFGhNml99Igs76U3uIbLUATb9D3fdt6q8rrWcNAG+tyzIciWQZcdIcvnJ0o3d31cBjMEuaiD1MFma3HI5juLVuqAAgeik+fWMS9aXiyyrBEz/4133aqt5LtbO7FZg13x26R1Bln1EliZskpz+6+u/Y3RaXqjnJHj39zO8Jqu6ZBZtd8jSqJUfK11dFepeICHSlAFkCLBlvfNkWSWwOQDV/++ue0QkxEuclV1ZACPc25QEWfYmWRJgpohVATb319ef6Ko+pp6W4Af+UoFTr9UuSSd3gSwNABqI16Et/ZkhVIlAJ3HZV78mceOQy7nP0ZPoZKkBbAGATgTtn+4qCIIMTZz3q7w+9AbY9UklQZbLRpYms0sMLgDQ9E9/a9miIdRXUvzAX0qcNFWAvR92rVfns6hkyQedLdjuPHTs/TNNqAqBniDQxx+XUath7OxztiRLg0dBjP/x+bww8BLEFcd3SgAUst8+pAiy7CxZEsGwj30wY/HT3+wZWaYVJ9kP/kc1gCwN7PsPQokICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICLREIi9/HhocUH0+Ns5euGiIIRYQEBBYUofKAGSfP+lnL1w0xQj1KVnyic0AGAOgtPiqAeA4gLKYcIE+VGBFAJOuj0pnL1wshrx2HoBjRKbPXriodaiNKoD5Nm8Tul8CiRPkJNelUouv6lyPVnpZj3ZL5pcLqZgK5ByAKQ9RGgA0/q8DRxjODQ0OZMXyEOhDRebG+NDggCRGRyAB+cpyPZpdgijB9ewU16OKGL3lwWURJlcCMOuyHMDJcfrshYtVn+9nuLJRuDDMDA0O4OyFixUx7AJ9gEmPZe/I8SSAQojrjwNYcBmS3UI6xjWGmO6uEqUKYMb1UZV797qPznX0qMzlb35ocGC4R7e4lkvmuwKKMMEz3AoCABNAIQzxea4DgHViL1OgD7zKc66PhgEs9qIMe8OwZy9cJDGDPS9fs5wEAaB69sLF0RCOyiLqe5qVsxcu5sRI9qBnyRekm/BKETzEAvdGnYkeD7LMeYhBBXAl6iHeBU7O1SAFxZWb0z7t7IWLGr9XBsB6bpHpAN7k9zE94RAZwAbX83Q/b5l/v+hYTmcvXKwEPOetJdqrOh762QsXi7z947zPvu10jU+Gj4/saq/h9/2Q46sDeJdfr4eQA9Xn+S3np5f6EMOrrJy9cFEfGhyouGRsEkBuiXZmPcrN8Psbn38V9v6/zPuyECR/XSRg1d12HilSosh5EvPubYtLhyj82gWfNe14ZN51bXAvTvLqC8/abpqzJXQBIu75Sh5vrCXOXrhoDg0OTMMOxQL+iUDuvqt8fNxjbfD5atJtHv25ZF/4M/Le70eU+ZZzFEIPyC55Ury620+Gu+JZeiwh4+yFi+tiWOpy0IYv79gkGkO8fqhwojZaWNcVPgFB9zJ5qErioZAgwdNhb1J7CYu5/m64xiWovQWfexRdCjnnCck4yDkGiStsI7d4lgk7JF4MEO7ZEONrABj1CQcp/Hp5ies1fr3ZIvS0LH1ow6tcx8nC+3nLBIZWyQ6ev1U8hmgk77UTnqVHPgucnFrNW/nshYuFNtZ2q3l3t6UM/z2+wtkLF8v8+3n+fanFsyouZV9yKXv3vAT2yaX8Z1yEm44wvm59qnN5NdqcM4n3Ox/i6ybXL1XX9edcc5xr5Qx55qTW9wgyn+PE32qOfCOXIftp8HHNhFmriXqWHkE/HvUhXBCMEELndPQ4V7wStzqyLmswMzQ4kG6hDLOe+zhwLHeJKxdnoqrckwO3UpzrFT6hQR6Ewn+cxTfnGqtxV3sV3t4gS2nK1V7DZX1VAsZH48/SfcZncmhw4EqfEM28y/pyX+/0w1GGMuw9kXVOezlJuMer4rIAAWDE9XyVE1p6iTleqg/rfUJTsfvQpldpODLs4122vQBd99O5LClhvbUuYcrVvjnX5xtceiE/NDjwrpfsfOZd52syaN5Hzl64ONyiLXmftSI5HqfPlo9bVt3ee5CiLbn6lB0aHCi1kKFJz3VR4DxH4vN9bmhwQOfytMAdkqjG3oyLHByd9CbvuzPWGdeYzfI1YrjaNOPqW6UFKY+30Xe4jQzU9zi9OnpmaHDA8CE5tx4wuf6e4/93dJEcwrDvGFlKHkWXVLhHdi1GRzl5FX11aHCg5Bokx8No5d023WdocKDMPQPJ1Z8mi2NocGDBNZnZJcJtflahxp817yLUPIBii7GtWcYugXQ8uhk/b9MzPtN8TBS+yN9yWcuKO1zpYwFrAMpDgwOLrvHNciseaExr97O2Nf78RYcwhwYHFGexx+xDZmhwoBijD/MuJeTuQxR5zLZQBCXX39WhwQE1AYvV5DKkeec/5ppiURV3iBBig3y6nuUmpxG3jPOxnFniHt61rbjnPUx7hwYHZB6mVNGYUzHqmRsNQNGHUN1GvTY0OKC5ZMh33XrCjVpUGeBh/bQnWuPWFRgaHHDarHPS05bY1nETpZ8z4Yy1e+9TdUiRbyk5iUTy0OBANsC7zLv0gdaG/Pt5e0WPBzrm5hvu0SotIkiaR54SRQrLi3HPwOcChMsJnTpWnrzEUZRCwD10D6FqPt+rRGh/wU+A+bMKnn4GEq5Xibis2XFPeystPPcwz2s1bqN8jNf5KUY3QQQ8P81/LvcIcDf7kAvRh8hepaeNFR8LuR00yWGPnaXTW4zltCfS0mosyy3W9mjItWJ4idQ1R+7rpoOUONcx2hJeX60tAYbLWJueFc5euKjz7axRLlNGQEQvz+Xs3NDgwGzA0RGTt6PEdZLeYqyr7rXUou+TLXR2W33nRnfQHBxv0b5xj9Gth+CKrnuWnYISNrzLrceKK4SyPuCrWkhl81YCSkRr0V5taHCgFipq4YXMtXhGxmNBFkO2TXK8O27F6mg8wjPjsVp1Lnh+C7aK+h6QwkOcjuGxwP/VW4SN2umDevbCRS2BPiThVfp5l60s8LCYS3hNRT06YsRtH5+XoD+rnrmMPO8BshhmrVRC9EmN4116Eke0diMLfN+w6oooKGhMYFM8fcwMDQ40RGe43Os+4VLFpWedUKzSoi0tvUtupCbhVc5FlUc+7s6zzSV0rzk0OFANiiB0miwNj+uuJfR8JcKiBeyMxyBLttswI45bHLit2mwb16Zhh7uzHmWmuoTRsTqPuwWR79U516uue3uvN/j10x6PrJ0+IIk+xPAqwS35UNcNDQ5Ue8Ub7KGqKbJXySdwz3dDjsFSukRf4u/uvcvxocEBdwWydvYql2q3yXWr5iG9DOpnLcGNRc2TbSrxtTGCpZPglur7jMuDrgSskdIyypYe4jtvJf3QsGSpIWBvIqTVnuUToPFQSs5FOFIHyWoloRJRAAzPIswNDQ44x3gUl5UpuUgtC3vP089yTXPvS+VeveJZlDK3wrMtErCWrQ9LyKfaBpHLaL0nLdDGvHcI0lIGh8e7zMLeE2/bq+S60AnjHl9KRrncV7in5N5vzIDvyXOi9Nun01zk8hb/V0VwiNXrXdb25dvdp+3m/HUKYcnyuEuZKEODA5mI58AmA7xSt+elhPBY3aHXN3vIcvZbFJKHTOIoAPf4zLV79s61Z1F1tdMhwHHXYpvxC2X57Nm5zz06oVqJe4Bpnz4stFvBqd0+hPAqQx0D8CSKeL0PgXrVo0TmPaTxLPG5WUo/bQjpYdW8S05MSXhW6z16oRJW7l3bOl7CmEHjmeNCi2N6kyEel0P9OJKT9b3cXqVbfypDgwPSEuttJOkGpEJOlIbG/YKZgDeNBCkVOWCg3bHrlnU3XYeaHVSXWRnIS4yB21PRYx4F0AIUuq93NDQ4wPjPOVdGbdH1edGPALkiSwfcd951vepzvZMAkgvRh/GIfZDb6UOYOpoebyGKIih5LN1JCATK7lJr22/eI2I6jJxxmciG1Hmaa60XkcxepVvnqWH3cj0Z4Q4pwuVl1uSyBVFKCLF95em7OjQ4MIXGYgNd9yq5/nQ/d6rFWGWwzNmwOdcESbATPWb8FNLQ4IA0NDiQ5Qdd3YKZ8wx0xWUxyPyecoBCm/dY/3oPKIRZPwLhB6Pdk1mIef8S6uFmhRNX0PjMesjZ9FlU4y0IPh9gxbmvnwp4voTGDEEjoT4YfoQbsg9mSBnxepVahMXr9gryMZV8ouAGR+SfDjTFPe9R1nbcV/uVXXKncjlTPc/KovHMcBSDKBHPistXxWNIzHN9KQcYEkVPuzWP52ws5VFxPR237/ll9irdetSRqSzPDpY9vFP06JHEcFmESTZ5oof78GuWN9qt0PysFxM+FRn4PUdRP2+kwE6s0FxKWvXcT0NjqvlywjEadNSLKKgeTzoX1xJzJdfMu+691Pjobi+Pl36qoH7422mvDnsfw9l/lAPIveR6hnd+3kXzvqHpXlAJ9UFbog9X+o17B71K9/czrr5PhnluhxH3dV2J1pR16Yt5NB6+X2reR9t4nluXqJw0nfsqHn0khbine+8yskHV4r45noyWd42DymXSaa8E/60eP/3nLoWX5cToeLDv94yzu+9XRux7ZTmLZbjOpzoylYGdHWzyfslR57hTniXOXrho8soqaTSHQVUf4Te4xTfc4nydDrtQtdsSVbkg5dEYi8+dvXAx3UN7Q06bFd7WrGvCqrAP3lbaFRDYBRgqS4yPwUMww97x4QlVBZcF6oSinHfpuds87LZaXeeWyj7Pd8qYSahXDVnncz4xqT7kAvqQbdWHpL1Kj3fpDv9lO+Sl9SVc816OO+8xnjfMZd0dVVA8Rth0xDXuJaYkxqbA15V7Tbjb6yXKapD+49sg3vU9iXpZOMXV92GPvMoR+l7qEZka9kQSJK/eRbiM2e5ak9yKcRor84nX44ZTXPdT+L2MNkIznQhzMdfEkctDkVEvMN2xt5u7xkeNM9auN7I7P7pznzBt9syPxC1dM0pYPKAPoe/Rbh8Elm3tKJ7Ikx5VdhJqhzs5q9CqgIUnTKwvUY6vnTbJLh2iuLzISMeBPGvL4D+rbl24KpIBCdWGFa/zSYAsBQQEln1dFl2RgkAC5PvrTtlL8CiE3uK+gcXBBbo+x/MuA3t0iRdzOAaOefbCxcuTeP5lYgoEBARWANyEN+kUqPC8uiuDxrddaD5v2FFdv44jwWo9Am1jAfVtn5mhwYGC580pEuxtpYZ640k9XHhGwrMUEFgpazOwSLoPNPi8Ts7zqioHJvdADTHKyzq/EqIVSW/5mrWoSIkpiAwNnpJUAgICyw+eBOYkzfgRmwk7AWS0RaKg7vm9IoiyZ+bX5HvGOT6PfvNn8DlLJ0mUAPD/DwAhZw78aoHrYgAAAABJRU5ErkJggg==" class="caes-logo-inline">
+    <h1>康普艾節能計算公式</h1>
+</div>
+
+
+</div>
 
 <div class="tabs" id="tabsOuter">
-<button class="tab-btn active" onclick="switchTab(0)">管路流速</button>
+<button class="tab-btn active nfb-tab" onclick="switchTab(0)">NFB & Cable<br>選用</button>
 <button class="tab-btn" onclick="switchTab(1)">空壓能效</button>
-<button class="tab-btn" onclick="switchTab(2)">泵浦變頻</button>
-<button class="tab-btn" onclick="switchTab(3)">熱平衡分析</button>
-<button class="tab-btn" onclick="switchTab(4)">數據比對</button>
-<button class="tab-btn" onclick="switchTab(5)">內徑流速</button>
-<button class="tab-btn" onclick="switchTab(6)">NFB選用</button>
+<button class="tab-btn" onclick="switchTab(2)">水流速計算</button>
+<button class="tab-btn" onclick="switchTab(3)">管路流量</button>
+<button class="tab-btn" onclick="switchTab(4)">泵浦相似定律</button>
+<button class="tab-btn" onclick="switchTab(5)">熱平衡分析</button>
 </div>
 
-<!-- tab0 管路流速 -->
+
 <div id="tab0" class="tab-content active">
 <div class="section-card">
-<div class="section-title">管道與流速參數</div>
-<div class="form-group"><label>最大流速（對應 20mA）</label><div class="input-wrapper"><input type="number" id="maxVelocity" value="" inputmode="decimal" step="any" oninput="calcFlow()"><span class="unit">m/s</span></div></div>
-<div class="form-group">
-<label>管週長 / 外徑規格</label>
-<div class="input-wrapper" style="margin-bottom: 8px;"><input type="number" id="pipeCircumference" value="" inputmode="decimal" step="any" oninput="syncCircumference('mm')"><span class="unit">mm</span></div>
-<div class="input-wrapper"><input type="number" id="pipeInch" value="" inputmode="decimal" step="any" oninput="syncCircumference('inch')"><span class="unit">吋 (inch)</span></div>
+<div class="section-title red">三相馬達/主機 NFB & Cable 選用</div>
+
+<div class="grid-2">
+<div class="form-group"><label>馬力規格 (HP)</label><div class="input-wrapper"><input type="number" id="nfbHP" value="" inputmode="decimal" step="any" oninput="syncNFBPower('hp')"><span class="unit">HP</span></div></div>
+<div class="form-group"><label>電功率 (kW)</label><div class="input-wrapper"><input type="number" id="nfbKW" value="" inputmode="decimal" step="any" oninput="syncNFBPower('kw')"><span class="unit">kW</span></div></div>
 </div>
-<div class="form-group"><label>管壁厚度</label><div class="input-wrapper"><input type="number" id="wallThickness" value="" inputmode="decimal" step="any" oninput="calcFlow()"><span class="unit">mm</span></div></div>
+
+<div class="grid-2">
+<div class="form-group"><label>平均三相電壓 (V)</label><div class="input-wrapper"><input type="number" id="nfbV" value="" inputmode="decimal" oninput="calcNFBSelection()"><span class="unit">V</span></div></div>
+<div class="form-group"><label>功率因數 (PF)</label><div class="input-wrapper"><input type="number" id="nfbPF" value="" inputmode="decimal" step="any" max="1" oninput="calcNFBSelection()"><span class="unit">--</span></div></div>
+</div>
+
+<div class="result-box red">
+<div class="result-row"><span>計算理論運轉電流：</span><span class="result-val cyan-text" id="resNfbRunA">0.00 A</span></div>
+<div class="result-row"><span>安全需求電流 (1.5倍)：</span><span class="result-val orange-text" id="resNfbTargetA">0.00 A</span></div>
+<div class="result-row"><span>推薦選用 NFB 規格：</span><span class="result-val red-text highlight" id="resNfbSpec">-- A</span></div>
+</div>
+</div>
+
+<div class="section-card">
+<div class="section-title">電纜規格</div>
+
+<div class="form-group"><label>線材絕緣材質</label><select id="nfbInsulation" onchange="calcNFBSelection()"><option value="XLPE">XLPE</option><option value="PVC">PVC</option></select></div>
+<div class="form-group"><label>電纜芯數</label><select id="nfbCableCore" onchange="calcNFBSelection()"><option value="3C">3C</option><option value="4C">4C</option></select></div>
+<div class="form-group"><label>佈設環境</label><select id="nfbInstallMethod" onchange="calcNFBSelection()"><option value="conduit">電線管佈設</option><option value="open_air">空中及暗渠佈設</option></select></div>
+
 <div class="result-box blue">
-<div class="result-row"><span>管路直徑（ID）：</span><span class="result-val" id="resID">0.0 mm</span></div>
-<div class="result-row"><span>截面積：</span><span class="result-val" id="resArea">0.0000 m²</span></div>
-<div class="result-row"><span>估算最大流量：</span><span class="result-val highlight green-text" id="resFlow">0.00 CMM</span></div>
+<div class="result-row"><span>篩選條件：</span><span class="result-val" id="resCableCond">--</span></div>
+<div class="result-row"><span>最佳施工方案：</span><span class="result-val highlight green-text" id="resCableBest">--</span></div>
+<div class="result-row"><span>單條方案：</span><span class="result-val" id="resCableSingle">--</span></div>
+<div class="result-row"><span>二並方案：</span><span class="result-val" id="resCableDouble">--</span></div>
+<div class="result-row"><span>三並方案：</span><span class="result-val" id="resCableTriple">--</span></div>
+<div class="result-row"><span>最佳方案容許電流：</span><span class="result-val highlight cyan-text" id="resCableCurrent">0 A</span></div>
 </div>
 </div>
 </div>
 
-<!-- tab1 空壓能效 -->
+
 <div id="tab1" class="tab-content">
 <div class="section-card">
 <div class="section-title orange">空壓效能與比功率</div>
 <div class="form-group"><label>輸入電壓</label><div class="input-wrapper"><input type="number" id="vAir" value="" inputmode="decimal" oninput="calcAir()"><span class="unit">V</span></div></div>
 <div class="form-group"><label>輸入電流</label><div class="input-wrapper"><input type="number" id="iAir" value="" inputmode="decimal" oninput="calcAir()"><span class="unit">A</span></div></div>
 <div class="form-group"><label>功率因數（PF）</label><div class="input-wrapper"><input type="number" id="pfAir" value="" inputmode="decimal" step="any" max="1" oninput="calcAir()"><span class="unit">cosφ</span></div></div>
+<div class="form-group"><label>已知 kW</label><div class="input-wrapper"><input type="number" id="knownAirKW" value="" inputmode="decimal" step="any" oninput="calcAir()"><span class="unit">kW</span></div></div>
 <div class="form-group"><label>流量（Flow）</label><div class="input-wrapper"><input type="number" id="airFlow" value="" inputmode="decimal" step="any" oninput="calcAir()"><span class="unit">m³/min</span></div></div>
 <div class="result-box orange">
 <div class="result-row"><span>空壓機電功率：</span><span class="result-val" id="resAirKW">0.00 kW</span></div>
@@ -153,48 +308,96 @@ input:focus { border-color: var(--accent-blue); }
 </div>
 </div>
 
-<!-- tab2 泵浦變頻 -->
+
 <div id="tab2" class="tab-content">
 <div class="section-card">
-<div class="section-title green">泵浦相似定律變頻計算</div>
-<div class="grid-2">
-<div class="form-group"><label>原始頻率 (f1)</label><div class="input-wrapper"><input type="number" id="pumpF1" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">Hz</span></div></div>
-<div class="form-group"><label>目標頻率 (f2)</label><div class="input-wrapper"><input type="number" id="pumpF2" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">Hz</span></div></div>
-</div>
-<div class="form-group"><label>原始流量 (Q1)</label><div class="input-wrapper"><input type="number" id="pumpQ1" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">LPM</span></div></div>
-<div class="form-group"><label>原始揚程 (H1)</label><div class="input-wrapper"><input type="number" id="pumpH1" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">m</span></div></div>
-<div class="form-group"><label>原始軸功率 (P1)</label><div class="input-wrapper"><input type="number" id="pumpP1" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">kW</span></div></div>
-<div class="result-box green">
-<div class="result-row"><span>目標流量 (Q2)：</span><span class="result-val highlight green-text" id="resPumpQ2">0.00 LPM</span></div>
-<div class="result-row"><span>目標揚程 (H2)：</span><span class="result-val highlight cyan-text" id="resPumpH2">0.00 m</span></div>
-<div class="result-row"><span>目標功率 (P2)：</span><span class="result-val highlight orange-text" id="resPumpP2">0.00 kW</span></div>
-<div class="result-row" style="margin-top:8px;padding-top:8px;border-top:1px dashed rgba(52,199,89,0.3);">
-<span>💡 預估變頻節能率：</span><span class="result-val green-text highlight" id="resPumpEnergySaving">0.00 %</span>
-</div>
+<div class="section-title cyan">水流速計算</div>
+<div class="form-group"><label>管內徑 (ID) mm</label><div class="input-wrapper"><input type="number" id="pipeID_mm" value="" inputmode="decimal" step="any" oninput="syncPipeID('mm')"><span class="unit">mm</span></div></div>
+<div class="form-group"><label>管內徑 (ID) inch</label><div class="input-wrapper"><input type="number" id="pipeID_inch" value="" inputmode="decimal" step="any" oninput="syncPipeID('inch')"><span class="unit">吋</span></div></div>
+<div class="form-group"><label>管壁厚度</label><div class="input-wrapper"><input type="number" id="pipeWall_mm" value="" inputmode="decimal" step="any" oninput="calcPipeFlow2()"><span class="unit">mm</span></div></div>
+<div class="form-group"><label>水流量 LPM</label><div class="input-wrapper"><input type="number" id="flow_lpm" value="" inputmode="decimal" step="any" oninput="syncPipeFlow('lpm')"><span class="unit">LPM</span></div></div>
+<div class="form-group"><label>水流量 m³/h</label><div class="input-wrapper"><input type="number" id="flow_cmh" value="" inputmode="decimal" step="any" oninput="syncPipeFlow('cmh')"><span class="unit">m³/h</span></div></div>
+<div class="result-box cyan">
+<div class="result-row"><span>實際計算內徑：</span><span class="result-val" id="resActualID2">0.0 mm</span></div>
+<div class="result-row"><span>管道截面積：</span><span class="result-val" id="resArea2">0.0000 m²</span></div>
+<div class="result-row"><span>實際流速 (V)：</span><span class="result-val highlight green-text" id="resV2">0.00 m/s</span></div>
 </div>
 </div>
 </div>
 
-<!-- tab3 熱平衡分析 -->
+
 <div id="tab3" class="tab-content">
+<div class="section-card">
+<div class="section-title">管路流量參數</div>
+<div class="form-group"><label>最大流速（對應 20mA）</label><div class="input-wrapper"><input type="number" id="maxVelocity" value="" inputmode="decimal" step="any" oninput="calcFlow()"><span class="unit">m/s</span></div></div>
+<div class="form-group"><label>管週長 / 外徑規格 mm</label><div class="input-wrapper"><input type="number" id="pipeCircumference" value="" inputmode="decimal" step="any" oninput="syncCircumference('mm')"><span class="unit">mm</span></div></div>
+<div class="form-group"><label>管週長 / 外徑規格 inch</label><div class="input-wrapper"><input type="number" id="pipeInch" value="" inputmode="decimal" step="any" oninput="syncCircumference('inch')"><span class="unit">吋</span></div></div>
+<div class="form-group"><label>管壁厚度</label><div class="input-wrapper"><input type="number" id="wallThickness" value="" inputmode="decimal" step="any" oninput="calcFlow()"><span class="unit">mm</span></div></div>
+<div class="result-box blue">
+<div class="result-row"><span>管路內徑（ID）：</span><span class="result-val" id="resID">0.0 mm</span></div>
+<div class="result-row"><span>截面積：</span><span class="result-val" id="resArea">0.0000 m²</span></div>
+<div class="result-row"><span>估算最大流量：</span><span class="result-val highlight green-text" id="resFlow">0.00 CMM</span></div>
+</div>
+</div>
+</div>
+
+
+<div id="tab4" class="tab-content">
+<div class="section-card">
+<div class="section-title green">泵浦相似定律試算</div>
+
+<div class="form-group">
+<label>計算情境選擇</label>
+<select id="pumpMode" onchange="switchPumpMode()">
+<option value="speed">1. 改變轉速/頻率 (葉輪外徑固定)</option>
+<option value="diameter">2. 改變葉輪直徑 (轉速固定)</option>
+</select>
+</div>
+
+<div class="pair-row pump-visible" id="input-speed-group">
+<div class="form-group"><label>初始頻率</label><div class="input-wrapper"><input type="number" id="pumpF1" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">Hz</span></div></div>
+<div class="form-group"><label>目標頻率</label><div class="input-wrapper"><input type="number" id="pumpF2" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">Hz</span></div></div>
+</div>
+
+<div class="pair-row pump-hidden" id="input-diameter-group">
+<div class="form-group"><label>初始直徑</label><div class="input-wrapper"><input type="number" id="pumpD1" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">mm</span></div></div>
+<div class="form-group"><label>目標直徑</label><div class="input-wrapper"><input type="number" id="pumpD2" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">mm</span></div></div>
+</div>
+
+<div class="form-group"><label>初始流量 (Q1)</label><div class="input-wrapper"><input type="number" id="pumpQ1" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">LPM</span></div></div>
+<div class="form-group"><label>初始揚程 (H1)</label><div class="input-wrapper"><input type="number" id="pumpH1" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">m</span></div></div>
+<div class="form-group"><label>初始軸功率 (P1)</label><div class="input-wrapper"><input type="number" id="pumpP1" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">kW</span></div></div>
+
+<div class="result-box green">
+<div class="result-row"><span>預期流量 (Q2)：</span><span class="result-val highlight green-text" id="resPumpQ2">0.00 LPM</span></div>
+<div class="result-row"><span>預期揚程 (H2)：</span><span class="result-val highlight cyan-text" id="resPumpH2">0.00 m</span></div>
+<div class="result-row"><span>預期軸功率 (P2)：</span><span class="result-val highlight orange-text" id="resPumpP2">0.00 kW</span></div>
+<div class="result-row"><span id="labelSaving">節能率：</span><span class="result-val green-text highlight" id="resPumpEnergySaving">0.0 %</span></div>
+</div>
+</div>
+</div>
+
+<div id="tab5" class="tab-content">
 <div class="section-card">
 <div class="section-title cyan">1. 冰水側輸入</div>
 <div class="grid-2">
-<div class="form-group"><label>回水溫度(高)</label><div class="input-wrapper"><input type="number" id="tempIn" value="" inputmode="decimal" step="any" oninput="calculateChillerAll()"><span class="unit">°C</span></div></div>
-<div class="form-group"><label>出水溫度(低)</label><div class="input-wrapper"><input type="number" id="tempOut" value="" inputmode="decimal" step="any" oninput="calculateChillerAll()"><span class="unit">°C</span></div></div>
+<div class="form-group"><label>回水溫度</label><div class="input-wrapper"><input type="number" id="tempIn" value="" inputmode="decimal" step="any" oninput="calculateChillerAll()"><span class="unit">°C</span></div></div>
+<div class="form-group"><label>出水溫度</label><div class="input-wrapper"><input type="number" id="tempOut" value="" inputmode="decimal" step="any" oninput="calculateChillerAll()"><span class="unit">°C</span></div></div>
 </div>
-<div class="form-group"><label>冰水流量(LPM)</label><div class="input-wrapper"><input type="number" id="flowRate" value="" inputmode="decimal" step="any" oninput="syncCHFlow('lpm')"><span class="unit">LPM</span></div></div>
-<div class="form-group"><label>冰水流量 (噸)</label><div class="input-wrapper"><input type="number" id="flowRateCMH" value="" inputmode="decimal" step="any" oninput="syncCHFlow('cmh')"><span class="unit">m³/h</span></div></div>
+<div class="form-group"><label>冰水流量</label><div class="input-wrapper"><input type="number" id="flowRate" value="" inputmode="decimal" step="any" oninput="syncCHFlow('lpm')"><span class="unit">LPM</span></div></div>
+<div class="form-group"><label>冰水流量</label><div class="input-wrapper"><input type="number" id="flowRateCMH" value="" inputmode="decimal" step="any" oninput="syncCHFlow('cmh')"><span class="unit">m³/h</span></div></div>
 </div>
+
 <div class="section-card">
-<div class="section-title cyan" style="color:#00bfff;">2. 冷卻水側輸入</div>
+<div class="section-title cyan">2. 冷卻水側輸入</div>
 <div class="grid-2">
-<div class="form-group"><label>回水溫度(高)</label><div class="input-wrapper"><input type="number" id="cwTempIn" value="" inputmode="decimal" step="any" oninput="calculateChillerAll()"><span class="unit">°C</span></div></div>
-<div class="form-group"><label>出水溫度(低)</label><div class="input-wrapper"><input type="number" id="cwTempOut" value="" inputmode="decimal" step="any" oninput="calculateChillerAll()"><span class="unit">°C</span></div></div>
+<div class="form-group"><label>回水溫度</label><div class="input-wrapper"><input type="number" id="cwTempIn" value="" inputmode="decimal" step="any" oninput="calculateChillerAll()"><span class="unit">°C</span></div></div>
+<div class="form-group"><label>出水溫度</label><div class="input-wrapper"><input type="number" id="cwTempOut" value="" inputmode="decimal" step="any" oninput="calculateChillerAll()"><span class="unit">°C</span></div></div>
 </div>
-<div class="form-group"><label>冷卻水流量(LPM)</label><div class="input-wrapper"><input type="number" id="cwFlowRate" value="" inputmode="decimal" step="any" oninput="syncCWFlow('lpm')"><span class="unit">LPM</span></div></div>
-<div class="form-group"><label>冷卻水流量 (噸)</label><div class="input-wrapper"><input type="number" id="cwFlowRateCMH" value="" inputmode="decimal" step="any" oninput="syncCWFlow('cmh')"><span class="unit">m³/h</span></div></div>
+<div class="form-group"><label>冷卻水流量</label><div class="input-wrapper"><input type="number" id="cwFlowRate" value="" inputmode="decimal" step="any" oninput="syncCWFlow('lpm')"><span class="unit">LPM</span></div></div>
+<div class="form-group"><label>冷卻水流量</label><div class="input-wrapper"><input type="number" id="cwFlowRateCMH" value="" inputmode="decimal" step="any" oninput="syncCWFlow('cmh')"><span class="unit">m³/h</span></div></div>
 </div>
+
 <div class="section-card">
 <div class="section-title orange">3. 冰機系統電力輸入</div>
 <div class="grid-2">
@@ -204,113 +407,42 @@ input:focus { border-color: var(--accent-blue); }
 <div class="form-group"><label>功率因數 (PF)</label><div class="input-wrapper"><input type="number" id="pf" value="" inputmode="decimal" step="any" max="1" oninput="syncPower('vi')"><span class="unit">--</span></div></div>
 <div class="form-group"><label>實測電功率</label><div class="input-wrapper"><input type="number" id="inputKW" value="" inputmode="decimal" step="any" oninput="syncPower('kw')"><span class="unit">kW</span></div></div>
 </div>
-<div class="section-card" style="border-color:var(--accent-cyan);">
-<div class="section-title cyan">📋 溫差與單位能耗即時顯示</div>
+
+<div class="section-card">
+<div class="section-title cyan">📋 數據即時顯示</div>
 <div class="result-box cyan">
 <div class="result-row"><span>冰水溫差 (ΔT)：</span><span class="result-val cyan-text" id="chDeltaT">0.00 °C</span></div>
 <div class="result-row"><span>冰水單位能耗：</span><span class="result-val cyan-text" id="chKwRtResult">0.000 kW/RT</span></div>
 <div class="result-row"><span>冷卻水溫差 (ΔT)：</span><span class="result-val orange-text" id="cwDeltaT">0.00 °C</span></div>
 </div>
 </div>
-<div class="section-card" style="border-color:var(--accent-orange);">
+
+<div class="section-card">
 <div class="result-box orange">
-<div class="section-title" style="font-size:13px;margin-bottom:8px;">實測主機電功率</div>
-<div class="result-row"><span>主機電功率 (kW)：</span><span class="result-val" id="f1_kw">0.00 kW</span></div>
-<div class="section-title green" style="font-size:13px;margin-top:12px;margin-bottom:8px;">主機能效指標 (RT / COP / (kW/RT))</div>
+<div class="result-row"><span>主機電功率：</span><span class="result-val" id="f1_kw">0.00 kW</span></div>
 <div class="result-row"><span>主機製冷能力：</span><span class="result-val green-text highlight" id="f2_chRT">0.00 RT</span></div>
 <div class="result-row"><span>性能係數 (COP)：</span><span class="result-val green-text highlight" id="f6_cop">0.00</span></div>
-<div class="result-row"><span>每冷凍噸能耗 (kW/RT)：</span><span class="result-val green-text highlight" id="f6_kwrt">0.000 kW/RT</span></div>
+<div class="result-row"><span>每冷凍噸能耗：</span><span class="result-val green-text highlight" id="f6_kwrt">0.000 kW/RT</span></div>
 </div>
 </div>
-<div class="section-card" style="border-color:var(--accent-green);">
-<div class="section-title green">📋 熱平衡分析與誤差率</div>
+
+<div class="section-card">
+<div class="section-title green">📋 熱平衡分析</div>
 <div class="result-box green" id="hbBox">
 <div class="result-row"><span>冰水側製冷量：</span><span class="result-val" id="f2_kcal">0 kcal/h</span></div>
 <div class="result-row"><span>冷卻水側散熱量：</span><span class="result-val" id="f3_cwKcal">0 kcal/h</span></div>
-<div class="result-row"><span>散熱 VS 吸熱比：</span><span class="result-val" id="f4_ratio">0.00</span></div>
-<div class="result-row"><span>熱平衡實測誤差率：</span><span class="result-val highlight green-text" id="f5_hbErr">0.00 %</span></div>
+<div class="result-row"><span>散熱 / 吸熱比：</span><span class="result-val" id="f4_ratio">0.00</span></div>
+<div class="result-row"><span>熱平衡誤差率：</span><span class="result-val highlight green-text" id="f5_hbErr">0.00 %</span></div>
 </div>
 </div>
 </div>
 
-<!-- tab4 數據比對 -->
-<div id="tab4" class="tab-content">
-<div class="section-card">
-<div class="section-title blue">現場流量交叉比對驗證</div>
-<div class="grid-2">
-<div class="form-group"><label>量測溫差 (ΔT)</label><div class="input-wrapper"><input type="number" id="dtPump" value="" inputmode="decimal" step="any" oninput="calcAdvCross()"><span class="unit">°C</span></div></div>
-<div class="form-group"><label>現場已知噸數</label><div class="input-wrapper"><input type="number" id="knownRT" value="" inputmode="decimal" step="any" oninput="syncAdvTonnage('rt')"><span class="unit">RT</span></div></div>
-</div>
-<div class="form-group"><label>現場已知製冷能力功率</label><div class="input-wrapper"><input type="number" id="knownKW" value="" inputmode="decimal" step="any" oninput="syncAdvTonnage('kw')"><span class="unit">kW</span></div></div>
-<hr style="border:none;border-top:1px dashed var(--border-color);margin:15px 0;">
-<div class="grid-2">
-<div class="form-group"><label>馬達電壓 (V)</label><div class="input-wrapper"><input type="number" id="vPump" value="" inputmode="decimal" oninput="calcAdvCross()"><span class="unit">V</span></div></div>
-<div class="form-group"><label>馬達電流 (I)</label><div class="input-wrapper"><input type="number" id="iPump" value="" inputmode="decimal" oninput="calcAdvCross()"><span class="unit">A</span></div></div>
-</div>
-<div class="form-group"><label>馬達功因 (PF)</label><div class="input-wrapper"><input type="number" id="pfPump" value="" inputmode="decimal" step="any" oninput="calcAdvCross()"><span class="unit">--</span></div></div>
-<div class="grid-2">
-<div class="form-group"><label>馬達效率 (ηm)</label><div class="input-wrapper"><input type="number" id="effPump" value="" inputmode="decimal" step="any" oninput="calcAdvCross()"><span class="unit">--</span></div></div>
-<div class="form-group"><label>水泵效率 (ηp)</label><div class="input-wrapper"><input type="number" id="effPumpBody" value="" inputmode="decimal" step="any" oninput="calcAdvCross()"><span class="unit">--</span></div></div>
-</div>
-<div class="result-box blue">
-<div class="section-title" style="font-size:13px;margin-bottom:8px;color:var(--accent-cyan);">📊 流量多維度比對結果</div>
-<div class="result-row"><span>1. 依冷凍噸 (RT) 反推：</span><span class="result-val cyan-text" id="resLpmByRT">0.0 LPM</span></div>
-<div class="result-row"><span>2. 依換製冷能力功率 (kW) 反推：</span><span class="result-val green-text" id="resLpmByKW">0.0 LPM</span></div>
-<div class="result-row"><span>3. 馬達實測總電功率：</span><span class="result-val orange-text" id="resPumpKw">0.00 kW</span></div>
-<div class="result-row"><span>4. 依馬達損失熱反推：</span><span class="result-val" id="resLpmByMotor">0.0 LPM</span></div>
-</div>
-</div>
-</div>
 
-<!-- tab5 內徑流速 -->
-<div id="tab5" class="tab-content">
-<div class="section-card">
-<div class="section-title cyan">管內徑流速流量換算</div>
-<div class="form-group">
-<label>管內徑 (ID)</label>
-<div class="input-wrapper" style="margin-bottom:8px;"><input type="number" id="pipeID_mm" value="" inputmode="decimal" step="any" oninput="syncPipeID('mm')"><span class="unit">mm</span></div>
-<div class="input-wrapper"><input type="number" id="pipeID_inch" value="" inputmode="decimal" step="any" oninput="syncPipeID('inch')"><span class="unit">吋 (inch)</span></div>
 </div>
-<div class="form-group">
-<label>水流量 (Flow)</label>
-<div class="input-wrapper" style="margin-bottom:8px;"><input type="number" id="flow_lpm" value="" inputmode="decimal" step="any" oninput="syncPipeFlow('lpm')"><span class="unit">LPM</span></div>
-<div class="input-wrapper"><input type="number" id="flow_cmh" value="" inputmode="decimal" step="any" oninput="syncPipeFlow('cmh')"><span class="unit">m³/h (噸)</span></div>
-</div>
-<div class="result-box cyan">
-<div class="result-row"><span>管道截面積：</span><span class="result-val" id="resArea2">0.0000 m²</span></div>
-<div class="result-row"><span>對應實際流速 (V)：</span><span class="result-val highlight green-text" id="resV2">0.00 m/s</span></div>
-</div>
-</div>
-</div>
-
-<!-- tab6 NFB選用 -->
-<div id="tab6" class="tab-content">
-<div class="section-card">
-<div class="section-title red">三相馬達/主機 NFB 開關智慧選用</div>
-<div class="grid-2">
-<div class="form-group"><label>馬力規格 (HP)</label><div class="input-wrapper"><input type="number" id="nfbHP" value="" inputmode="decimal" step="any" oninput="syncNFBPower('hp')"><span class="unit">HP</span></div></div>
-<div class="form-group"><label>電功率 (kW)</label><div class="input-wrapper"><input type="number" id="nfbKW" value="" inputmode="decimal" step="any" oninput="syncNFBPower('kw')"><span class="unit">kW</span></div></div>
-</div>
-<div class="grid-2">
-<div class="form-group"><label>平均三相電壓 (V)</label><div class="input-wrapper"><input type="number" id="nfbV" value="" inputmode="decimal" oninput="calcNFBSelection()"><span class="unit">V</span></div></div>
-<div class="form-group"><label>功率因數 (PF)</label><div class="input-wrapper"><input type="number" id="nfbPF" value="" inputmode="decimal" step="any" max="1" oninput="calcNFBSelection()"><span class="unit">--</span></div></div>
-</div>
-<div class="result-box red">
-<div class="section-title" style="font-size:13px;margin-bottom:8px;color:var(--accent-red);">📋 運轉電流與 NFB 選用規格</div>
-<div class="result-row"><span>計算理論運轉電流：</span><span class="result-val cyan-text" id="resNfbRunA">0.00 A</span></div>
-<div class="result-row"><span>安全放大需求電流 (1.5倍)：</span><span class="result-val orange-text" id="resNfbTargetA">0.00 A</span></div>
-<div class="result-row" style="margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,59,48,0.3);">
-<span>💡 推薦選用 NFB 規格：</span><span class="result-val red-text highlight" id="resNfbSpec">-- A</span>
-</div>
-</div>
-</div>
-</div>
-
-</div><!-- end main-app -->
 
 <script>
 // ══════════════════════════════════════════
-//  Supabase 金鑰綁定系統
+//  Supabase 金鑰綁定系統（只控制解鎖，不修改公式區）
 // ══════════════════════════════════════════
 const SUPABASE_URL = 'https://wnvawhxjxwkamemgljyg.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_kmjybpRUDuSWn02tf2uaug_iPwHk16o';
@@ -371,6 +503,13 @@ async function verifyKey() {
     }
 }
 
+function unlockMainApp() {
+    const overlay = document.getElementById('auth-overlay');
+    const app = document.getElementById('main-app');
+    if (overlay) overlay.remove();
+    if (app) app.style.display = 'block';
+}
+
 function showAuthSuccess() {
     document.getElementById('auth-box').innerHTML = `
         <div style="text-align:center;">
@@ -378,11 +517,7 @@ function showAuthSuccess() {
             <h2 style="color:#34c759;font-size:20px;margin-bottom:8px;">驗證成功！</h2>
             <p style="color:#888;font-size:14px;">此裝置已永久授權。</p>
         </div>`;
-    setTimeout(() => {
-        document.getElementById('auth-overlay').remove();
-        document.getElementById('main-app').style.display = 'block';
-        initAll();
-    }, 1200);
+    setTimeout(unlockMainApp, 1200);
 }
 
 async function checkSavedKey() {
@@ -392,209 +527,453 @@ async function checkSavedKey() {
         const deviceId = getDeviceId();
         const data = await supabaseFetch(`keys?key=eq.${encodeURIComponent(savedKey)}&select=*`);
         if (data && data.length > 0 && data[0].device_id === deviceId && data[0].bound) {
-            document.getElementById('auth-overlay').remove();
-            document.getElementById('main-app').style.display = 'block';
-            initAll();
+            unlockMainApp();
         }
     } catch(e) {
-        document.getElementById('auth-overlay').remove();
-        document.getElementById('main-app').style.display = 'block';
-        initAll();
+        unlockMainApp();
     }
 }
 
-document.getElementById('key-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') verifyKey();
+window.addEventListener('load', () => {
+    const keyInput = document.getElementById('key-input');
+    if (keyInput) {
+        keyInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') verifyKey();
+        });
+    }
+    checkSavedKey();
 });
+</script>
 
-window.addEventListener('load', checkSavedKey);
+<script>
+const cableDatabase = {
+"XLPE": {
+"3C": {
+"conduit": [
+{"size": "1.6 mm", "current": 26}, {"size": "2.0 mm", "current": 33}, {"size": "2.6 mm", "current": 46}, {"size": "3.2 mm", "current": 61},
+{"size": "2 mm²", "current": 26}, {"size": "3.5 mm²", "current": 36}, {"size": "5.5 mm²", "current": 47}, {"size": "8 mm²", "current": 60},
+{"size": "14 mm²", "current": 82}, {"size": "22 mm²", "current": 107}, {"size": "30 mm²", "current": 128}, {"size": "38 mm²", "current": 147},
+{"size": "50 mm²", "current": 173}, {"size": "60 mm²", "current": 197}, {"size": "80 mm²", "current": 232}, {"size": "100 mm²", "current": 266},
+{"size": "125 mm²", "current": 305}, {"size": "150 mm²", "current": 343}, {"size": "200 mm²", "current": 399}
+],
+"open_air": [
+{"size": "1.6 mm", "current": 24}, {"size": "2.0 mm", "current": 31}, {"size": "2.6 mm", "current": 43}, {"size": "3.2 mm", "current": 57},
+{"size": "2 mm²", "current": 24}, {"size": "3.5 mm²", "current": 34}, {"size": "5.5 mm²", "current": 44}, {"size": "8 mm²", "current": 56},
+{"size": "14 mm²", "current": 78}, {"size": "22 mm²", "current": 102}, {"size": "30 mm²", "current": 123}, {"size": "38 mm²", "current": 142},
+{"size": "50 mm²", "current": 168}, {"size": "60 mm²", "current": 193}, {"size": "80 mm²", "current": 228}, {"size": "100 mm²", "current": 263},
+{"size": "125 mm²", "current": 304}, {"size": "150 mm²", "current": 344}, {"size": "200 mm²", "current": 405}
+]
+},
+"4C": {
+"conduit": [
+{"size": "1.6 mm", "current": 23}, {"size": "2.0 mm", "current": 30}, {"size": "2.6 mm", "current": 41}, {"size": "3.2 mm", "current": 55},
+{"size": "2 mm²", "current": 23}, {"size": "3.5 mm²", "current": 33}, {"size": "5.5 mm²", "current": 43}, {"size": "8 mm²", "current": 54},
+{"size": "14 mm²", "current": 74}, {"size": "22 mm²", "current": 97}, {"size": "30 mm²", "current": 115}, {"size": "38 mm²", "current": 133},
+{"size": "50 mm²", "current": 155}, {"size": "60 mm²", "current": 177}, {"size": "80 mm²", "current": 208}, {"size": "100 mm²", "current": 238},
+{"size": "125 mm²", "current": 276}, {"size": "150 mm²", "current": 312}, {"size": "200 mm²", "current": 363}
+],
+"open_air": [
+{"size": "1.6 mm", "current": 22}, {"size": "2.0 mm", "current": 28}, {"size": "2.6 mm", "current": 39}, {"size": "3.2 mm", "current": 52},
+{"size": "2 mm²", "current": 22}, {"size": "3.5 mm²", "current": 30}, {"size": "5.5 mm²", "current": 40}, {"size": "8 mm²", "current": 51},
+{"size": "14 mm²", "current": 71}, {"size": "22 mm²", "current": 93}, {"size": "30 mm²", "current": 112}, {"size": "38 mm²", "current": 129},
+{"size": "50 mm²", "current": 153}, {"size": "60 mm²", "current": 175}, {"size": "80 mm²", "current": 207}, {"size": "100 mm²", "current": 238},
+{"size": "125 mm²", "current": 279}, {"size": "150 mm²", "current": 317}, {"size": "200 mm²", "current": 375}
+]
+}
+},
+"PVC": {
+"3C": {
+"conduit": [
+{"size": "1.6 mm", "current": 15}, {"size": "2.0 mm", "current": 19}, {"size": "2.6 mm", "current": 26}, {"size": "3.2 mm", "current": 35},
+{"size": "2 mm²", "current": 15}, {"size": "3.5 mm²", "current": 19}, {"size": "5.5 mm²", "current": 25}, {"size": "8 mm²", "current": 33},
+{"size": "14 mm²", "current": 47}, {"size": "22 mm²", "current": 61}, {"size": "30 mm²", "current": 74}, {"size": "38 mm²", "current": 84},
+{"size": "50 mm²", "current": 101}, {"size": "60 mm²", "current": 116}, {"size": "80 mm²", "current": 139}, {"size": "100 mm²", "current": 161},
+{"size": "125 mm²", "current": 187}, {"size": "150 mm²", "current": 213}, {"size": "200 mm²", "current": 253}
+],
+"open_air": [
+{"size": "1.6 mm", "current": 17}, {"size": "2.0 mm", "current": 22}, {"size": "2.6 mm", "current": 31}, {"size": "3.2 mm", "current": 41},
+{"size": "2 mm²", "current": 17}, {"size": "3.5 mm²", "current": 23}, {"size": "5.5 mm²", "current": 31}, {"size": "8 mm²", "current": 40},
+{"size": "14 mm²", "current": 57}, {"size": "22 mm²", "current": 76}, {"size": "30 mm²", "current": 92}, {"size": "105 mm²", "current": 105},
+{"size": "50 mm²", "current": 127}, {"size": "60 mm²", "current": 147}, {"size": "80 mm²", "current": 177}, {"size": "100 mm²", "current": 207},
+{"size": "125 mm²", "current": 242}, {"size": "150 mm²", "current": 277}, {"size": "200 mm²", "current": 331}
+]
+},
+"4C": {
+"conduit": [
+{"size": "1.6 mm", "current": 14}, {"size": "2.0 mm", "current": 17}, {"size": "2.6 mm", "current": 23}, {"size": "3.2 mm", "current": 31},
+{"size": "2 mm²", "current": 14}, {"size": "3.5 mm²", "current": 17}, {"size": "5.5 mm²", "current": 22}, {"size": "8 mm²", "current": 29},
+{"size": "14 mm²", "current": 42}, {"size": "22 mm²", "current": 54}, {"size": "30 mm²", "current": 66}, {"size": "38 mm²", "current": 75},
+{"size": "50 mm²", "current": 90}, {"size": "60 mm²", "current": 103}, {"size": "124 mm²", "current": 124}, {"size": "100 mm²", "current": 143},
+{"size": "125 mm²", "current": 166}, {"size": "150 mm²", "current": 189}, {"size": "200 mm²", "current": 225}
+],
+"open_air": [
+{"size": "1.6 mm", "current": 15}, {"size": "2.0 mm", "current": 20}, {"size": "2.6 mm", "current": 27}, {"size": "3.2 mm", "current": 37},
+{"size": "2 mm²", "current": 15}, {"size": "3.5 mm²", "current": 20}, {"size": "5.5 mm²", "current": 27}, {"size": "8 mm²", "current": 36},
+{"size": "14 mm²", "current": 51}, {"size": "22 mm²", "current": 68}, {"size": "30 mm²", "current": 82}, {"size": "38 mm²", "current": 94},
+{"size": "50 mm²", "current": 114}, {"size": "60 mm²", "current": 131}, {"size": "80 mm²", "current": 158}, {"size": "100 mm²", "current": 185},
+{"size": "125 mm²", "current": 216}, {"size": "150 mm²", "current": 247}, {"size": "200 mm²", "current": 295}
+]
+}
+}
+};
 
-// ══════════════════════════════════════════
-//  計算工具函式
-// ══════════════════════════════════════════
+const nfbStandardSizes = [15, 20, 30, 40, 50, 60, 75, 100, 125, 150, 175, 225, 250, 300, 400, 500, 600, 800, 1000, 1200];
+
 function getNumber(id) { const el = document.getElementById(id); return el ? (parseFloat(el.value) || 0) : 0; }
 function setText(id, text) { const el = document.getElementById(id); if (el) el.innerHTML = text; }
 
 function switchTab(index) {
-    const tabs = document.querySelectorAll('.tab-btn');
-    const contents = document.querySelectorAll('.tab-content');
-    tabs.forEach((tab, i) => tab.classList.toggle('active', i === index));
-    contents.forEach((content, i) => content.classList.toggle('active', i === index));
-    const activeBtn = tabs[index];
-    const outer = document.getElementById('tabsOuter');
-    if (outer && activeBtn) {
-        const left = activeBtn.offsetLeft - (outer.clientWidth / 2) + (activeBtn.clientWidth / 2);
-        outer.scrollTo({ left: left, behavior: 'smooth' });
-    }
+  const tabs = document.querySelectorAll('.tab-btn');
+  const contents = document.querySelectorAll('.tab-content');
+  tabs.forEach((tab, i) => tab.classList.toggle('active', i === index));
+  contents.forEach((content, i) => content.classList.toggle('active', i === index));
+
+  const activeBtn = tabs[index];
+  const outer = document.getElementById('tabsOuter');
+  if (outer && activeBtn) {
+    const left = activeBtn.offsetLeft - (outer.clientWidth / 2) + (activeBtn.clientWidth / 2);
+    outer.scrollTo({ left: left, behavior: 'smooth' });
+  }
 }
 
+// 1. 管路流速
 function syncCircumference(type) {
-    const elMM = document.getElementById('pipeCircumference');
-    const elInch = document.getElementById('pipeInch');
-    if (type === 'mm') {
-        if (elMM.value.trim() === '') { elInch.value = ''; } else {
-            const mmVal = parseFloat(elMM.value) || 0;
-            elInch.value = mmVal > 0 ? ((mmVal / Math.PI) / 25.4).toFixed(2) : '';
-        }
-    } else {
-        if (elInch.value.trim() === '') { elMM.value = ''; } else {
-            const inchVal = parseFloat(elInch.value) || 0;
-            elMM.value = inchVal > 0 ? (inchVal * 25.4 * Math.PI).toFixed(1) : '';
-        }
+  const elMM = document.getElementById('pipeCircumference');
+  const elInch = document.getElementById('pipeInch');
+  if (type === 'mm') {
+    if (elMM.value.trim() === '') { elInch.value = ''; } else {
+      const mmVal = parseFloat(elMM.value) || 0;
+      elInch.value = mmVal > 0 ? ((mmVal / Math.PI) / 25.4).toFixed(2) : '';
     }
-    calcFlow();
-}
-
-function syncAdvTonnage(type) {
-    const elRT = document.getElementById('knownRT');
-    const elKW = document.getElementById('knownKW');
-    if (type === 'rt') {
-        elKW.value = elRT.value.trim() === '' ? '' : (parseFloat(elRT.value) * 3.517).toFixed(1);
-    } else {
-        elRT.value = elKW.value.trim() === '' ? '' : (parseFloat(elKW.value) / 3.517).toFixed(1);
+  } else if (type === 'inch') {
+    if (elInch.value.trim() === '') { elMM.value = ''; } else {
+      const inchVal = parseFloat(elInch.value) || 0;
+      elMM.value = inchVal > 0 ? (inchVal * 25.4 * Math.PI).toFixed(1) : '';
     }
-    calcAdvCross();
-}
-
-function syncNFBPower(type) {
-    const elHP = document.getElementById('nfbHP');
-    const elKW = document.getElementById('nfbKW');
-    if (type === 'hp') {
-        elKW.value = elHP.value.trim() === '' ? '' : (parseFloat(elHP.value) * 0.746).toFixed(2);
-    } else {
-        elHP.value = elKW.value.trim() === '' ? '' : (parseFloat(elKW.value) / 0.746).toFixed(1);
-    }
-    calcNFBSelection();
-}
-
-function syncPipeID(type) {
-    const elMM = document.getElementById('pipeID_mm');
-    const elInch = document.getElementById('pipeID_inch');
-    if (type === 'mm') {
-        elInch.value = elMM.value.trim() === '' ? '' : (parseFloat(elMM.value) / 25.4).toFixed(2);
-    } else {
-        elMM.value = elInch.value.trim() === '' ? '' : (parseFloat(elInch.value) * 25.4).toFixed(1);
-    }
-    calcPipeFlow2();
-}
-
-function syncPipeFlow(type) {
-    const elLPM = document.getElementById('flow_lpm');
-    const elCMH = document.getElementById('flow_cmh');
-    if (type === 'lpm') {
-        elCMH.value = elLPM.value.trim() === '' ? '' : (parseFloat(elLPM.value) * 0.06).toFixed(1);
-    } else {
-        elLPM.value = elCMH.value.trim() === '' ? '' : Math.round(parseFloat(elCMH.value) / 0.06);
-    }
-    calcPipeFlow2();
-}
-
-function syncCHFlow(type) {
-    if (type === 'lpm') {
-        document.getElementById('flowRateCMH').value = (getNumber('flowRate') * 0.06).toFixed(1);
-    } else {
-        document.getElementById('flowRate').value = Math.round(getNumber('flowRateCMH') / 0.06);
-    }
-    calculateChillerAll();
-}
-
-function syncCWFlow(type) {
-    if (type === 'lpm') {
-        document.getElementById('cwFlowRateCMH').value = (getNumber('cwFlowRate') * 0.06).toFixed(1);
-    } else {
-        document.getElementById('cwFlowRate').value = Math.round(getNumber('cwFlowRateCMH') / 0.06);
-    }
-    calculateChillerAll();
-}
-
-function syncPower(type) {
-    const v = getNumber('voltage'); const i = getNumber('current'); const pf = getNumber('pf');
-    if (type === 'vi') document.getElementById('inputKW').value = ((v * i * 1.73205 * pf) / 1000).toFixed(2);
-    calculateChillerAll();
+  }
+  calcFlow();
 }
 
 function calcFlow() {
-    const c = getNumber('pipeCircumference'); const thk = getNumber('wallThickness'); const maxV = getNumber('maxVelocity');
-    const od = c > 0 ? (c / Math.PI) : 0;
-    const id = Math.max(0, od - (2 * thk));
-    const area = Math.PI * Math.pow((id / 2) / 1000, 2);
-    setText('resID', id.toFixed(1) + ' mm'); setText('resArea', area.toFixed(4) + ' m²'); setText('resFlow', (maxV * area * 60).toFixed(2) + ' CMM');
+  const maxV = getNumber('maxVelocity');
+  const mmCircum = getNumber('pipeCircumference');
+  const thickness = getNumber('wallThickness');
+  
+  if (mmCircum <= 0) {
+    setText('resID', '0.0 mm'); setText('resArea', '0.0000 m²'); setText('resFlow', '0.00 CMM');
+    return;
+  }
+  const outerD = mmCircum / Math.PI;
+  const innerD = outerD - (thickness * 2);
+  const area = Math.PI * Math.pow((innerD / 1000) / 2, 2);
+  const cmm = area * maxV * 60;
+  
+  setText('resID', innerD.toFixed(1) + ' mm');
+  setText('resArea', area.toFixed(4) + ' m²');
+  setText('resFlow', cmm.toFixed(2) + ' CMM');
 }
 
+// 2. 空壓能效
 function calcAir() {
-    const v = getNumber('vAir'); const i = getNumber('iAir'); const pf = getNumber('pfAir'); const flow = getNumber('airFlow');
-    const kw = (v * i * 1.73205 * pf) / 1000;
-    setText('resAirKW', kw.toFixed(2) + ' kW'); setText('resAirHP', (kw * 1.34).toFixed(2) + ' HP'); setText('resAirEff', (flow > 0 ? (kw / flow) : 0).toFixed(3) + ' kW/CMM');
+  const v = getNumber('vAir');
+  const i = getNumber('iAir');
+  const pf = getNumber('pfAir');
+  const knownKW = getNumber('knownAirKW');
+  const flow = getNumber('airFlow');
+
+  let kw = 0;
+
+  // 優先使用現場已知 kW；若未輸入，再用 V × A × PF 計算
+  if (knownKW > 0) {
+    kw = knownKW;
+  } else if (v > 0 && i > 0 && pf > 0) {
+    kw = (v * i * 1.732 * pf) / 1000;
+  }
+
+  if (kw <= 0) {
+    setText('resAirKW', '0.00 kW');
+    setText('resAirHP', '0.00 HP');
+    setText('resAirEff', '0.000 kW/CMM');
+    return;
+  }
+
+  const hp = kw / 0.746;
+
+  setText('resAirKW', kw.toFixed(2) + ' kW');
+  setText('resAirHP', hp.toFixed(2) + ' HP');
+
+  if (flow > 0) {
+    const eff = kw / flow;
+    setText('resAirEff', eff.toFixed(3) + ' kW/CMM');
+  } else {
+    setText('resAirEff', '0.000 kW/CMM');
+  }
+}
+
+// 3. 泵浦相似定律
+function switchPumpMode() {
+  const mode = document.getElementById('pumpMode').value;
+  const speedGroup = document.getElementById('input-speed-group');
+  const diameterGroup = document.getElementById('input-diameter-group');
+
+  if (mode === 'speed') {
+    speedGroup.classList.remove('pump-hidden');
+    speedGroup.classList.add('pump-visible');
+    diameterGroup.classList.remove('pump-visible');
+    diameterGroup.classList.add('pump-hidden');
+  } else {
+    speedGroup.classList.remove('pump-visible');
+    speedGroup.classList.add('pump-hidden');
+    diameterGroup.classList.remove('pump-hidden');
+    diameterGroup.classList.add('pump-visible');
+  }
+
+  calcPumpLaws();
 }
 
 function calcPumpLaws() {
-    const f1 = getNumber('pumpF1'); const f2 = getNumber('pumpF2');
-    const q1 = getNumber('pumpQ1'); const h1 = getNumber('pumpH1'); const p1 = getNumber('pumpP1');
-    if (f1 > 0 && f2 > 0) {
-        const ratio = f2 / f1;
-        const p2 = p1 * Math.pow(ratio, 3);
-        setText('resPumpQ2', (q1 * ratio).toFixed(0) + ' LPM');
-        setText('resPumpH2', (h1 * Math.pow(ratio, 2)).toFixed(2) + ' m');
-        setText('resPumpP2', p2.toFixed(2) + ' kW');
-        setText('resPumpEnergySaving', (p1 > 0 ? Math.max(0, ((p1 - p2) / p1) * 100) : 0).toFixed(2) + ' %');
+  const mode = document.getElementById('pumpMode').value;
+  const q1 = getNumber('pumpQ1');
+  const h1 = getNumber('pumpH1');
+  const p1 = getNumber('pumpP1');
+
+  let ratio = 0;
+
+  if (mode === 'speed') {
+    const f1 = getNumber('pumpF1');
+    const f2 = getNumber('pumpF2');
+    if (f1 > 0 && f2 > 0) ratio = f2 / f1;
+  } else {
+    const d1 = getNumber('pumpD1');
+    const d2 = getNumber('pumpD2');
+    if (d1 > 0 && d2 > 0) ratio = d2 / d1;
+  }
+
+  if (ratio <= 0) {
+    setText('resPumpQ2', '0.00 LPM');
+    setText('resPumpH2', '0.00 m');
+    setText('resPumpP2', '0.00 kW');
+    document.getElementById('labelSaving').innerText = '節能率：';
+    setText('resPumpEnergySaving', '0.0 %');
+    return;
+  }
+
+  const q2 = q1 * ratio;
+  const h2 = h1 * Math.pow(ratio, 2);
+  const p2 = p1 * Math.pow(ratio, 3);
+
+  setText('resPumpQ2', q2.toFixed(2) + ' LPM');
+  setText('resPumpH2', h2.toFixed(2) + ' m');
+  setText('resPumpP2', p2.toFixed(2) + ' kW');
+
+  if (p1 > 0) {
+    if (p2 < p1) {
+      const saving = ((p1 - p2) / p1) * 100;
+      document.getElementById('labelSaving').innerText = '節能率：';
+      setText('resPumpEnergySaving', saving.toFixed(1) + ' %');
+    } else if (p2 > p1) {
+      const increase = ((p2 - p1) / p1) * 100;
+      document.getElementById('labelSaving').innerText = '耗能增加：';
+      setText('resPumpEnergySaving', increase.toFixed(1) + ' %');
     } else {
-        setText('resPumpQ2', '0 LPM'); setText('resPumpH2', '0.00 m'); setText('resPumpP2', '0.00 kW'); setText('resPumpEnergySaving', '0.00 %');
+      document.getElementById('labelSaving').innerText = '節能率：';
+      setText('resPumpEnergySaving', '0.0 %');
     }
+  } else {
+    document.getElementById('labelSaving').innerText = '節能率：';
+    setText('resPumpEnergySaving', '0.0 %');
+  }
 }
 
+// 4. 熱平衡與主機能效
+function syncCHFlow(type) {
+  const lpm = document.getElementById('flowRate'); const cmh = document.getElementById('flowRateCMH');
+  if (type === 'lpm') cmh.value = lpm.value ? (parseFloat(lpm.value) * 0.06).toFixed(1) : '';
+  else lpm.value = cmh.value ? (parseFloat(cmh.value) / 0.06).toFixed(0) : '';
+  calculateChillerAll();
+}
+function syncCWFlow(type) {
+  const lpm = document.getElementById('cwFlowRate'); const cmh = document.getElementById('cwFlowRateCMH');
+  if (type === 'lpm') cmh.value = lpm.value ? (parseFloat(lpm.value) * 0.06).toFixed(1) : '';
+  else lpm.value = cmh.value ? (parseFloat(cmh.value) / 0.06).toFixed(0) : '';
+  calculateChillerAll();
+}
+function syncPower(type) {
+  if (type === 'vi') {
+    const v = getNumber('voltage'); const i = getNumber('current'); const pf = getNumber('pf');
+    document.getElementById('inputKW').value = (v * i * 1.732 * pf / 1000).toFixed(1);
+  }
+  calculateChillerAll();
+}
 function calculateChillerAll() {
-    const flow = getNumber('flowRate'); const tIn = getNumber('tempIn'); const tOut = getNumber('tempOut');
-    const cwFlow = getNumber('cwFlowRate'); const cwTIn = getNumber('cwTempIn'); const cwTOut = getNumber('cwTempOut');
-    const compKW = getNumber('inputKW');
-    const chDt = Math.abs(tIn - tOut); const cwDt = Math.abs(cwTOut - cwTIn);
-    setText('chDeltaT', chDt.toFixed(2) + ' °C'); setText('cwDeltaT', cwDt.toFixed(2) + ' °C');
-    const chKcalh = flow * 60 * chDt; const chRT = chKcalh / 3024; const chKW = chRT * 3.517;
-    setText('f2_chRT', chRT.toFixed(2) + ' RT'); setText('f2_kcal', Math.round(chKcalh).toLocaleString() + ' kcal/h');
-    setText('f1_kw', compKW.toFixed(2) + ' kW');
-    const realKwRt = chRT > 0 ? (compKW / chRT) : 0;
-    setText('chKwRtResult', realKwRt.toFixed(3) + ' kW/RT');
-    setText('f6_cop', (compKW > 0 ? (chKW / compKW) : 0).toFixed(2)); setText('f6_kwrt', realKwRt.toFixed(3) + ' kW/RT');
-    const cwKcalh = cwFlow * 60 * cwDt; setText('f3_cwKcal', Math.round(cwKcalh).toLocaleString() + ' kcal/h');
-    setText('f4_ratio', (chKcalh > 0 ? (cwKcalh / chKcalh) : 0).toFixed(2));
-    if (cwKcalh > 0) {
-        const hbError = ((chKcalh + (compKW * 860) - cwKcalh) / cwKcalh) * 100;
-        setText('f5_hbErr', hbError.toFixed(2) + ' %');
-        document.getElementById('hbBox').style.borderColor = Math.abs(hbError) > 5 ? 'var(--accent-red)' : 'var(--accent-green)';
-        document.getElementById('f5_hbErr').className = Math.abs(hbError) > 5 ? 'result-val red-text highlight' : 'result-val green-text highlight';
-    } else { setText('f5_hbErr', '0.00 %'); }
+  const chIn = getNumber('tempIn'); const chOut = getNumber('tempOut'); const chLpm = getNumber('flowRate');
+  const cwIn = getNumber('cwTempIn'); const cwOut = getNumber('cwTempOut'); const cwLpm = getNumber('cwFlowRate');
+  const kw = getNumber('inputKW');
+  
+  const chDT = Math.abs(chIn - chOut); const cwDT = Math.abs(cwIn - cwOut);
+  setText('chDeltaT', chDT.toFixed(2) + ' °C'); setText('cwDeltaT', cwDT.toFixed(2) + ' °C');
+  setText('f1_kw', kw.toFixed(2) + ' kW');
+
+  const chKcal = chLpm * 60 * chDT; const cwKcal = cwLpm * 60 * cwDT;
+  const rt = chKcal / 3024;
+  setText('f2_chRT', rt.toFixed(2) + ' RT');
+  setText('f2_kcal', Math.round(chKcal) + ' kcal/h'); setText('f3_cwKcal', Math.round(cwKcal) + ' kcal/h');
+
+  const kwrt = rt > 0 ? kw / rt : 0;
+  const cop = kwrt > 0 ? 3.517 / kwrt : 0;
+  setText('chKwRtResult', kwrt.toFixed(3) + ' kW/RT');
+  setText('f6_kwrt', kwrt.toFixed(3) + ' kW/RT'); setText('f6_cop', cop.toFixed(2));
+
+  if (chKcal > 0 && cwKcal > 0) {
+    const ratio = cwKcal / chKcal;
+    const err = Math.abs((chKcal + (kw * 860) - cwKcal) / cwKcal) * 100;
+    setText('f4_ratio', ratio.toFixed(2)); setText('f5_hbErr', err.toFixed(2) + ' %');
+  }
 }
 
-function calcAdvCross() {
-    const dt = getNumber('dtPump'); const rt = getNumber('knownRT'); const kwHeat = getNumber('knownKW');
-    const v = getNumber('vPump'); const i = getNumber('iPump'); const pf = getNumber('pfPump'); const effM = getNumber('effPump'); const effP = getNumber('effPumpBody');
-    setText('resLpmByRT', (dt > 0 ? (rt * 3024) / (60 * dt) : 0).toFixed(1) + ' LPM');
-    setText('resLpmByKW', (dt > 0 ? (kwHeat * 860) / (60 * dt) : 0).toFixed(1) + ' LPM');
-    const kwMotor = (v * i * 1.73205 * pf) / 1000; setText('resPumpKw', kwMotor.toFixed(2) + ' kW');
-    setText('resLpmByMotor', (dt > 0 ? (kwMotor * (1 - (effM * effP)) * 860) / (60 * dt) : 0).toFixed(1) + ' LPM');
+// 6. 內徑與流速換算
+function syncPipeID(type) {
+  const elMM = document.getElementById('pipeID_mm'); const elInch = document.getElementById('pipeID_inch');
+  if (type === 'mm') elInch.value = elMM.value ? (parseFloat(elMM.value) / 25.4).toFixed(2) : '';
+  else elMM.value = elInch.value ? (parseFloat(elInch.value) * 25.4).toFixed(1) : '';
+  calcPipeFlow2();
 }
-
+function syncPipeFlow(type) {
+  const elLPM = document.getElementById('flow_lpm'); const elCMH = document.getElementById('flow_cmh');
+  if (type === 'lpm') elCMH.value = elLPM.value ? (parseFloat(elLPM.value) * 0.06).toFixed(1) : '';
+  else elLPM.value = elCMH.value ? (parseFloat(elCMH.value) / 0.06).toFixed(0) : '';
+  calcPipeFlow2();
+}
 function calcPipeFlow2() {
-    const id = getNumber('pipeID_mm'); const qLpm = getNumber('flow_lpm');
-    const area = Math.PI * Math.pow((id / 2) / 1000, 2); setText('resArea2', area.toFixed(4) + ' m²');
-    setText('resV2', (area > 0 ? ((qLpm * 60) / 1000) / (3600 * area) : 0).toFixed(2) + ' m/s');
+  const inputID = getNumber('pipeID_mm');
+  const wall = getNumber('pipeWall_mm');
+  const lpm = getNumber('flow_lpm');
+
+  const actualID = inputID - (wall * 2);
+
+  if (actualID <= 0) {
+    setText('resActualID2', '0.0 mm');
+    setText('resArea2', '0.0000 m²');
+    setText('resV2', '0.00 m/s');
+    return;
+  }
+
+  const area = Math.PI * Math.pow((actualID / 1000) / 2, 2);
+  const m3s = (lpm / 1000) / 60;
+  const v = area > 0 ? m3s / area : 0;
+
+  setText('resActualID2', actualID.toFixed(1) + ' mm');
+  setText('resArea2', area.toFixed(4) + ' m²');
+  setText('resV2', v.toFixed(2) + ' m/s');
+}
+
+// 7. 三相馬達 NFB 與 安全線材選用
+function syncNFBPower(type) {
+  const elHP = document.getElementById('nfbHP'); const elKW = document.getElementById('nfbKW');
+  if (type === 'hp') elKW.value = elHP.value ? (parseFloat(elHP.value) * 0.746).toFixed(2) : '';
+  else elHP.value = elKW.value ? (parseFloat(elKW.value) / 0.746).toFixed(1) : '';
+  calcNFBSelection();
 }
 
 function calcNFBSelection() {
-    const kw = getNumber('nfbKW'); const v = getNumber('nfbV'); const pf = getNumber('nfbPF');
-    const runA = (v > 0 && pf > 0) ? (kw * 1000) / (1.73205 * v * pf) : 0;
-    setText('resNfbRunA', runA > 0 ? runA.toFixed(2) + ' A' : '0.00 A');
-    const targetA = runA * 1.5; setText('resNfbTargetA', targetA > 0 ? targetA.toFixed(2) + ' A' : '0.00 A');
-    if (targetA === 0) { setText('resNfbSpec', '-- A'); return; }
-    const nfbStandards = [15,20,30,40,50,60,75,100,125,150,175,200,225,250,300,400,500,630,800];
-    let chosen = nfbStandards[nfbStandards.length - 1];
-    for (let s of nfbStandards) { if (s >= targetA) { chosen = s; break; } }
-    setText('resNfbSpec', chosen + ' A');
-}
+  const kw = getNumber('nfbKW');
+  const v = getNumber('nfbV');
+  const pf = getNumber('nfbPF');
+  const insulation = document.getElementById('nfbInsulation').value;
+  const core = document.getElementById('nfbCableCore').value;
+  const method = document.getElementById('nfbInstallMethod').value;
 
-function initAll() {
-    syncCircumference('inch'); syncAdvTonnage('rt'); syncPipeID('mm'); syncPipeFlow('lpm');
-    calcFlow(); calcAir(); calcPumpLaws(); calculateChillerAll(); calcPipeFlow2(); calcNFBSelection();
+  if (v <= 0 || pf <= 0 || kw <= 0) {
+    setText('resNfbRunA', '0.00 A');
+    setText('resNfbTargetA', '0.00 A');
+    setText('resNfbSpec', '-- A');
+    setText('resCableCond', '--');
+    setText('resCableBest', '--');
+    setText('resCableSingle', '--');
+    setText('resCableDouble', '--');
+    setText('resCableTriple', '--');
+    setText('resCableCurrent', '0 A');
+    return;
+  }
+
+  const runA = (kw * 1000) / (v * 1.732 * pf);
+  const targetA = runA * 1.5;
+
+  let recommendedNfb = nfbStandardSizes[nfbStandardSizes.length - 1];
+  for (let size of nfbStandardSizes) {
+    if (size >= targetA) {
+      recommendedNfb = size;
+      break;
+    }
+  }
+
+  setText('resNfbRunA', runA.toFixed(2) + ' A');
+  setText('resNfbTargetA', targetA.toFixed(2) + ' A');
+  setText('resNfbSpec', recommendedNfb + ' A');
+
+  const db = cableDatabase[insulation][core][method];
+
+  // 線材選用使用「理論運轉電流 runA」計算，不使用 NFB 的 1.5 倍安全需求電流。
+  // 單條線材最大限制 200 mm²；並聯方案使用相同線材規格。
+  function cableSizeValue(sizeText) {
+    const n = parseFloat(sizeText);
+    return isNaN(n) ? 9999 : n;
+  }
+
+  function isAllowedSize(item) {
+    const sizeText = item.size || '';
+    const n = cableSizeValue(sizeText);
+    // 最大不要超過 200 mm²；原資料內的 1.6/2.0/2.6/3.2 mm 圓線也保留可用。
+    return n <= 200;
+  }
+
+  function findPlan(parallelCount) {
+    const derating = parallelCount === 1 ? 1.00 : 0.85;
+    for (let item of db) {
+      if (!isAllowedSize(item)) continue;
+      const totalCurrent = item.current * parallelCount * derating;
+      if (totalCurrent >= runA) {
+        const suffix = parallelCount === 1 ? '單條' : parallelCount + '並';
+        const text = parallelCount === 1
+          ? `${item.size}`
+          : `${item.size} × ${parallelCount}並`;
+        return {
+          count: parallelCount,
+          size: item.size,
+          sizeValue: cableSizeValue(item.size),
+          current: Math.round(totalCurrent),
+          text: text,
+          label: suffix
+        };
+      }
+    }
+    return null;
+  }
+
+  const singlePlan = findPlan(1);
+  const doublePlan = findPlan(2);
+  const triplePlan = findPlan(3);
+
+  const candidates = [singlePlan, doublePlan, triplePlan].filter(Boolean);
+
+  // 最佳施工方案：優先選「單條線徑較小」者；線徑相同時，用並聯數較少者。
+  let bestPlan = null;
+  if (candidates.length > 0) {
+    bestPlan = candidates.slice().sort((a, b) => {
+      if (a.sizeValue !== b.sizeValue) return a.sizeValue - b.sizeValue;
+      return a.count - b.count;
+    })[0];
+  }
+
+  setText('resCableCond', `${insulation} / ${core} / ${method === 'conduit' ? '管敷' : '明渠'}`);
+  setText('resCableSingle', singlePlan ? `${singlePlan.text} (${singlePlan.current}A)` : '--');
+  setText('resCableDouble', doublePlan ? `${doublePlan.text} (${doublePlan.current}A)` : '--');
+  setText('resCableTriple', triplePlan ? `${triplePlan.text} (${triplePlan.current}A)` : '--');
+  setText('resCableBest', bestPlan ? bestPlan.text : '--');
+  setText('resCableCurrent', bestPlan ? bestPlan.current + ' A' : '0 A');
 }
 </script>
 </body>
 </html>
+
+.
