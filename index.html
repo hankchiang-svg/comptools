@@ -242,20 +242,79 @@ margin:0 !important;
 
 </div>
 
+
+
+
 <div class="tabs" id="tabsOuter">
-<button class="tab-btn active nfb-tab" onclick="switchTab(0)">NFB & Cable<br>選用</button>
-<button class="tab-btn" onclick="switchTab(1)">空壓能效</button>
-<button class="tab-btn" onclick="switchTab(2)">水流速計算</button>
-<button class="tab-btn" onclick="switchTab(3)">管路流量</button>
-<button class="tab-btn" onclick="switchTab(4)">泵浦相似定律</button>
-<button class="tab-btn" onclick="switchTab(5)">熱平衡分析</button>
-<button class="tab-btn" onclick="switchTab(6)">單位換算</button>
-<button class="tab-btn" onclick="switchTab(7)">空壓節能<br>壓力試算</button>
-<button class="tab-btn" onclick="switchTab(8)">空壓洩漏量<br>計算</button>
+<button class="tab-btn active" onclick="switchTab(0)">單位換算</button>
+<button class="tab-btn nfb-tab" onclick="switchTab(1)">NFB & Cable<br>選用</button>
+<button class="tab-btn" onclick="switchTab(2)">空壓能效</button>
+<button class="tab-btn" onclick="switchTab(3)">空壓節能<br>壓力試算</button>
+<button class="tab-btn" onclick="switchTab(4)">空壓洩漏量<br>計算</button>
+<button class="tab-btn" onclick="switchTab(5)">水流速計算</button>
+<button class="tab-btn" onclick="switchTab(6)">管路最大<br>氣流量</button>
+<button class="tab-btn" onclick="switchTab(7)">泵浦/風扇<br>相似定律</button>
+<button class="tab-btn" onclick="switchTab(8)">熱平衡分析</button>
 </div>
 
 
+
+
+
+
 <div id="tab0" class="tab-content active">
+<div class="section-card">
+<div class="section-title green">單位換算</div>
+
+<div class="form-group">
+<label>換算類別</label>
+<select id="unitCategory" onchange="switchUnitCategory()">
+<option value="air">空壓單位</option>
+<option value="hvac">空調單位</option>
+</select>
+</div>
+
+
+<div id="unitAirPanel">
+<div class="section-title cyan">空壓流量單位</div>
+<div class="form-group"><label>流量 m³/min</label><div class="input-wrapper"><input type="number" id="airM3MIN" value="" inputmode="decimal" step="any" oninput="syncAirUnit('m3min')"><span class="unit">m³/min</span></div></div>
+<div class="form-group"><label>流量 CMM</label><div class="input-wrapper"><input type="number" id="airCMM" value="" inputmode="decimal" step="any" oninput="syncAirUnit('cmm')"><span class="unit">CMM</span></div></div>
+<div class="form-group"><label>流量 CMH</label><div class="input-wrapper"><input type="number" id="airCMH" value="" inputmode="decimal" step="any" oninput="syncAirUnit('cmh')"><span class="unit">m³/h</span></div></div>
+<div class="form-group"><label>流量 CFM</label><div class="input-wrapper"><input type="number" id="airCFM" value="" inputmode="decimal" step="any" oninput="syncAirUnit('cfm')"><span class="unit">CFM</span></div></div>
+
+<hr>
+
+<div class="section-title cyan">空壓壓力單位</div>
+<div class="form-group"><label>壓力 bar</label><div class="input-wrapper"><input type="number" id="airBar" value="" inputmode="decimal" step="any" oninput="syncAirUnit('bar')"><span class="unit">bar</span></div></div>
+<div class="form-group"><label>壓力 kg/cm²</label><div class="input-wrapper"><input type="number" id="airKGCM2" value="" inputmode="decimal" step="any" oninput="syncAirUnit('kgcm2')"><span class="unit">kg/cm²</span></div></div>
+<div class="form-group"><label>壓力 kPa</label><div class="input-wrapper"><input type="number" id="airKPA" value="" inputmode="decimal" step="any" oninput="syncAirUnit('kpa')"><span class="unit">kPa</span></div></div>
+<div class="form-group"><label>壓力 MPa</label><div class="input-wrapper"><input type="number" id="airMPA" value="" inputmode="decimal" step="any" oninput="syncAirUnit('mpa')"><span class="unit">MPa</span></div></div>
+<div class="form-group"><label>壓力 psi</label><div class="input-wrapper"><input type="number" id="airPSI" value="" inputmode="decimal" step="any" oninput="syncAirUnit('psi')"><span class="unit">psi</span></div></div>
+<div class="form-group"><label>壓力 mmH₂O</label><div class="input-wrapper"><input type="number" id="airMMH2O" value="" inputmode="decimal" step="any" oninput="syncAirUnit('mmh2o')"><span class="unit">mmH₂O</span></div></div>
+<div class="form-group"><label>壓力 mmHg</label><div class="input-wrapper"><input type="number" id="airMMHG" value="" inputmode="decimal" step="any" oninput="syncAirUnit('mmhg')"><span class="unit">mmHg</span></div></div>
+
+<hr>
+
+<div class="section-title cyan">功率單位</div>
+<div class="form-group"><label>功率 kW</label><div class="input-wrapper"><input type="number" id="airKWUnit" value="" inputmode="decimal" step="any" oninput="syncAirUnit('kw')"><span class="unit">kW</span></div></div>
+<div class="form-group"><label>馬力 HP</label><div class="input-wrapper"><input type="number" id="airHPUnit" value="" inputmode="decimal" step="any" oninput="syncAirUnit('hp')"><span class="unit">HP</span></div></div>
+</div>
+
+<div id="unitHvacPanel" style="display:none;">
+<div class="section-title orange">空調單位</div>
+<div class="form-group"><label>冷凍噸 RT</label><div class="input-wrapper"><input type="number" id="hvacRT" value="" inputmode="decimal" step="any" oninput="syncHvacUnit('rt')"><span class="unit">RT</span></div></div>
+<div class="form-group"><label>冷量 kW</label><div class="input-wrapper"><input type="number" id="hvacKW" value="" inputmode="decimal" step="any" oninput="syncHvacUnit('kw')"><span class="unit">kW</span></div></div>
+<div class="form-group"><label>冷量 kcal/h</label><div class="input-wrapper"><input type="number" id="hvacKcal" value="" inputmode="decimal" step="any" oninput="syncHvacUnit('kcal')"><span class="unit">kcal/h</span></div></div>
+<hr>
+<div class="form-group"><label>水量 LPM</label><div class="input-wrapper"><input type="number" id="hvacLPM" value="" inputmode="decimal" step="any" oninput="syncHvacUnit('lpm')"><span class="unit">LPM</span></div></div>
+<div class="form-group"><label>水量 CMH</label><div class="input-wrapper"><input type="number" id="hvacCMH" value="" inputmode="decimal" step="any" oninput="syncHvacUnit('cmh')"><span class="unit">m³/h</span></div></div>
+</div>
+
+</div>
+</div>
+
+
+<div id="tab1" class="tab-content">
 <div class="section-card">
 <div class="section-title red">三相馬達/主機 NFB & Cable 選用</div>
 
@@ -296,7 +355,7 @@ margin:0 !important;
 </div>
 
 
-<div id="tab1" class="tab-content">
+<div id="tab2" class="tab-content">
 <div class="section-card">
 <div class="section-title orange">空壓效能與比功率</div>
 <div class="form-group"><label>輸入電壓</label><div class="input-wrapper"><input type="number" id="vAir" value="" inputmode="decimal" oninput="calcAir()"><span class="unit">V</span></div></div>
@@ -313,7 +372,139 @@ margin:0 !important;
 </div>
 
 
-<div id="tab2" class="tab-content">
+
+<div id="tab3" class="tab-content">
+<div class="section-card">
+<div class="section-title green">空壓節能壓力試算</div>
+<div class="pair-row">
+<div class="form-group"><label>原壓力</label><div class="input-wrapper"><input type="number" id="saveOldPressure" value="" inputmode="decimal" step="any" oninput="calcAirSaving()"><span class="unit">bar</span></div></div>
+<div class="form-group"><label>改善後壓力</label><div class="input-wrapper"><input type="number" id="saveNewPressure" value="" inputmode="decimal" step="any" oninput="calcAirSaving()"><span class="unit">bar</span></div></div>
+</div>
+<div class="form-group"><label>主機功率</label><div class="input-wrapper"><input type="number" id="saveKW" value="" inputmode="decimal" step="any" oninput="calcAirSaving()"><span class="unit">kW</span></div></div>
+<div class="form-group"><label>運轉時數</label><div class="input-wrapper"><input type="number" id="saveRunHours" value="" inputmode="decimal" step="any" oninput="calcAirSaving()"><span class="unit">hr/年</span></div></div>
+<div class="form-group"><label>負載時數</label><div class="input-wrapper"><input type="number" id="saveLoadHours" value="" inputmode="decimal" step="any" oninput="calcAirSaving()"><span class="unit">hr/年</span></div></div>
+<div class="form-group"><label>電價</label><div class="input-wrapper"><input type="number" id="saveElecPrice" value="" inputmode="decimal" step="any" oninput="calcAirSaving()"><span class="unit">元/kWh</span></div></div>
+
+<div class="result-box green">
+<div class="result-row"><span id="labelPressureDiff">壓力降低量：</span><span class="result-val cyan-text" id="resPressureDiff">0.0 bar</span></div>
+<div class="result-row"><span>負載率：</span><span class="result-val cyan-text" id="resLoadRate">0.0 %</span></div>
+<div class="result-row"><span id="labelSavingRate">節能率：</span><span class="result-val green-text highlight" id="resSavingRate">💰 0.0 %</span></div>
+<div class="result-row"><span id="labelSavingKWH">年節電：</span><span class="result-val green-text highlight" id="resSavingKWH">0 kWh</span></div>
+<div class="result-row"><span id="labelSavingCost">年節費：</span><span class="result-val orange-text highlight" id="resSavingCost">💰 0 元</span></div>
+<div class="result-row"><span id="labelSavingCO2">CO₂ 減量：</span><span class="result-val cyan-text highlight" id="resSavingCO2">0 kg/年</span></div>
+</div>
+</div>
+</div>
+
+
+
+
+
+<div id="tab4" class="tab-content">
+<div class="section-card">
+<div class="section-title red">空壓洩漏量計算</div>
+
+<div class="form-group">
+<label>估算方式</label>
+<select id="leakMethod" onchange="switchLeakMethod(); calcLeakAll();">
+<option value="hole">方法1：孔徑估算法</option>
+<option value="load">方法2：Load / Unload 法</option>
+<option value="tank">方法3：儲氣桶壓降法</option>
+</select>
+</div>
+
+<div id="leakMethodNote" class="result-box cyan">
+<div class="result-row"><span>適用條件：</span><span class="result-val cyan-text" id="resLeakMethodNote">🟢 可於生產中快速估算，精度較低</span></div>
+</div>
+
+<div id="leakHolePanel">
+<div class="section-title cyan">方法1：孔徑估算法</div>
+<div class="result-box cyan">
+<div class="result-row"><span>現場條件：</span><span class="result-val cyan-text">🟢 可於正常生產中估算</span></div>
+</div>
+<div class="form-group"><label>系統壓力</label><div class="input-wrapper"><input type="number" id="leakHolePressure" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">bar</span></div></div>
+<div class="form-group"><label>漏孔直徑</label><div class="input-wrapper"><input type="number" id="leakHoleDia" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">mm</span></div></div>
+</div>
+
+<div id="leakLoadPanel" style="display:none;">
+<div class="section-title cyan">方法2：Load / Unload 法</div>
+<div class="result-box orange">
+<div class="result-row"><span>現場條件：</span><span class="result-val orange-text">🟡 建議停產、夜間或低用氣時測試</span></div>
+</div>
+<div class="form-group"><label>Load 秒數</label><div class="input-wrapper"><input type="number" id="leakLoadSec" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">sec</span></div></div>
+<div class="form-group"><label>Unload 秒數</label><div class="input-wrapper"><input type="number" id="leakUnloadSec" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">sec</span></div></div>
+</div>
+
+<div id="leakTankPanel" style="display:none;">
+<div class="section-title cyan">方法3：儲氣桶壓降法</div>
+<div class="result-box red">
+<div class="result-row"><span>現場條件：</span><span class="result-val red-text">🔴 必須停止所有用氣設備並隔離測試區域</span></div>
+</div>
+<div class="form-group"><label>儲氣桶容量</label><div class="input-wrapper"><input type="number" id="leakTankVol" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">L</span></div></div>
+<div class="form-group"><label>已知附加容積</label><div class="input-wrapper"><input type="number" id="leakPipeVolManual" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">L</span></div></div>
+
+<div class="section-title cyan">管路容積估算</div>
+<div class="form-group">
+<label>管徑快速選擇</label>
+<select id="leakPipeSizeSelect" onchange="selectLeakPipeSize()">
+<option value="">自訂 / 不選</option>
+<option value="25.4">1&quot;</option>
+<option value="31.75">1-1/4&quot;</option>
+<option value="38.1">1-1/2&quot;</option>
+<option value="50.8">2&quot;</option>
+<option value="63.5">2-1/2&quot;</option>
+<option value="76.2">3&quot;</option>
+<option value="101.6">4&quot;</option>
+<option value="127">5&quot;</option>
+<option value="152.4">6&quot;</option>
+<option value="203.2">8&quot;</option>
+<option value="254">10&quot;</option>
+<option value="304.8">12&quot;</option>
+</select>
+</div>
+
+<div class="pair-row">
+<div class="form-group"><label>管路內徑 mm</label><div class="input-wrapper"><input type="number" id="leakPipeIDMM" value="" inputmode="decimal" step="any" oninput="syncLeakPipeID('mm')"><span class="unit">mm</span></div></div>
+<div class="form-group"><label>管路內徑 inch</label><div class="input-wrapper"><input type="number" id="leakPipeIDInch" value="" inputmode="decimal" step="any" oninput="syncLeakPipeID('inch')"><span class="unit">吋</span></div></div>
+</div>
+
+<div class="form-group"><label>管路長度</label><div class="input-wrapper"><input type="number" id="leakPipeLength" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">m</span></div></div>
+
+<div class="result-box cyan">
+<div class="result-row"><span>管路自動估算容積：</span><span class="result-val cyan-text" id="resLeakPipeVolAuto">0 L</span></div>
+<div class="result-row"><span>有效儲氣總容積：</span><span class="result-val cyan-text highlight" id="resLeakEffectiveVol">0 L</span></div>
+<div class="result-row"><span>容積占比：</span><span class="result-val cyan-text" id="resLeakVolRatio">--</span></div>
+</div>
+
+<div class="form-group"><label>起始壓力</label><div class="input-wrapper"><input type="number" id="leakP1" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">bar</span></div></div>
+<div class="form-group"><label>終止壓力</label><div class="input-wrapper"><input type="number" id="leakP2" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">bar</span></div></div>
+<div class="form-group"><label>壓降時間</label><div class="input-wrapper"><input type="number" id="leakTankSec" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">sec</span></div></div>
+</div>
+
+<hr>
+
+<div class="section-title orange">成本換算</div>
+<div class="pair-row">
+<div class="form-group"><label>總馬力</label><div class="input-wrapper"><input type="number" id="leakTotalHP" value="" inputmode="decimal" step="any" oninput="syncLeakPower('hp')"><span class="unit">HP</span></div></div>
+<div class="form-group"><label>總功率</label><div class="input-wrapper"><input type="number" id="leakTotalKW" value="" inputmode="decimal" step="any" oninput="syncLeakPower('kw')"><span class="unit">kW</span></div></div>
+</div>
+<div class="form-group"><label>總流量</label><div class="input-wrapper"><input type="number" id="leakTotalFlow" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">CMM</span></div></div>
+<div class="form-group"><label>運轉時數</label><div class="input-wrapper"><input type="number" id="leakRunHours" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">hr/年</span></div></div>
+<div class="form-group"><label>電價</label><div class="input-wrapper"><input type="number" id="leakElecPrice" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">元/kWh</span></div></div>
+
+<div class="result-box red">
+<div class="result-row"><span>推估洩漏量：</span><span class="result-val red-text highlight" id="resLeakCMM">0.000 CMM</span></div>
+<div class="result-row"><span>洩漏量：</span><span class="result-val orange-text" id="resLeakCFM">0.00 CFM</span></div>
+<div class="result-row"><span>漏氣率：</span><span class="result-val cyan-text" id="resLeakRate">0.0 %</span></div>
+<div class="result-row"><span>系統比功率：</span><span class="result-val orange-text" id="resLeakSpecificPower">0.000 kW/CMM</span></div>
+<div class="result-row"><span>年損失電量：</span><span class="result-val red-text highlight" id="resLeakKWH">0 kWh</span></div>
+<div class="result-row"><span>年損失電費：</span><span class="result-val red-text highlight" id="resLeakCost">💸 0 元</span></div>
+</div>
+</div>
+</div>
+
+
+<div id="tab5" class="tab-content">
 <div class="section-card">
 <div class="section-title cyan">水流速計算</div>
 <div class="form-group"><label>管內徑 (ID) mm</label><div class="input-wrapper"><input type="number" id="pipeID_mm" value="" inputmode="decimal" step="any" oninput="syncPipeID('mm')"><span class="unit">mm</span></div></div>
@@ -330,17 +521,22 @@ margin:0 !important;
 </div>
 
 
-<div id="tab3" class="tab-content">
+<div id="tab6" class="tab-content">
 <div class="section-card">
-<div class="section-title">管路流量參數</div>
-<div class="form-group"><label>最大流速（對應 20mA）</label><div class="input-wrapper"><input type="number" id="maxVelocity" value="" inputmode="decimal" step="any" oninput="calcFlow()"><span class="unit">m/s</span></div></div>
-<div class="form-group"><label>管週長 / 外徑規格 mm</label><div class="input-wrapper"><input type="number" id="pipeCircumference" value="" inputmode="decimal" step="any" oninput="syncCircumference('mm')"><span class="unit">mm</span></div></div>
-<div class="form-group"><label>管週長 / 外徑規格 inch</label><div class="input-wrapper"><input type="number" id="pipeInch" value="" inputmode="decimal" step="any" oninput="syncCircumference('inch')"><span class="unit">吋</span></div></div>
+<div class="section-title">管路最大氣流量計算</div>
+
+<div class="result-box blue">
+<div class="result-row"><span>說明：</span><span class="result-val cyan-text">依推薦流速推估管路最大輸送能力</span></div>
+</div>
+
+<div class="form-group"><label>推薦/設定流速</label><div class="input-wrapper"><input type="number" id="maxVelocity" value="" inputmode="decimal" step="any" oninput="calcFlow()"><span class="unit">m/s</span></div></div>
+<div class="form-group"><label>管週長 / 外徑規格</label><div class="input-wrapper"><input type="number" id="pipeCircumference" value="" inputmode="decimal" step="any" oninput="syncCircumference('mm')"><span class="unit">mm</span></div></div>
+<div class="form-group"><label>管徑換算</label><div class="input-wrapper"><input type="number" id="pipeInch" value="" inputmode="decimal" step="any" oninput="syncCircumference('inch')"><span class="unit">吋</span></div></div>
 <div class="form-group"><label>管壁厚度</label><div class="input-wrapper"><input type="number" id="wallThickness" value="" inputmode="decimal" step="any" oninput="calcFlow()"><span class="unit">mm</span></div></div>
 <div class="result-box blue">
 <div class="result-row"><span>管路內徑（ID）：</span><span class="result-val" id="resID">0.0 mm</span></div>
 <div class="result-row"><span>截面積：</span><span class="result-val" id="resArea">0.0000 m²</span></div>
-<div class="result-row"><span>估算最大流量：</span><span class="result-val highlight green-text" id="resFlow">0.00 CMM</span></div>
+<div class="result-row"><span>估算最大氣流量：</span><span class="result-val highlight green-text" id="resFlow">0.00 CMM</span></div>
 <div class="result-row"><span>換算 CFM：</span><span class="result-val orange-text" id="resFlowCFM">0.00 CFM</span></div>
 <div class="result-row"><span>換算 CMH：</span><span class="result-val cyan-text" id="resFlowCMH">0.00 CMH</span></div>
 </div>
@@ -348,15 +544,15 @@ margin:0 !important;
 </div>
 
 
-<div id="tab4" class="tab-content">
+<div id="tab7" class="tab-content">
 <div class="section-card">
-<div class="section-title green">泵浦相似定律試算</div>
+<div class="section-title green">泵浦/風扇相似定律試算</div>
 
 <div class="form-group">
 <label>計算情境選擇</label>
 <select id="pumpMode" onchange="switchPumpMode()">
-<option value="speed">1. 改變轉速/頻率 (葉輪外徑固定)</option>
-<option value="diameter">2. 改變葉輪直徑 (轉速固定)</option>
+<option value="speed">1. 改變轉速/頻率</option>
+<option value="diameter">2. 改變葉輪/風扇直徑</option>
 </select>
 </div>
 
@@ -370,20 +566,20 @@ margin:0 !important;
 <div class="form-group"><label>目標直徑</label><div class="input-wrapper"><input type="number" id="pumpD2" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">mm</span></div></div>
 </div>
 
-<div class="form-group"><label>初始流量 (Q1)</label><div class="input-wrapper"><input type="number" id="pumpQ1" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">LPM</span></div></div>
-<div class="form-group"><label>初始揚程 (H1)</label><div class="input-wrapper"><input type="number" id="pumpH1" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">m</span></div></div>
+<div class="form-group"><label>初始流量/風量 (Q1)</label><div class="input-wrapper"><input type="number" id="pumpQ1" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">LPM</span></div></div>
+<div class="form-group"><label>初始揚程/風壓/靜壓 (H1)</label><div class="input-wrapper"><input type="number" id="pumpH1" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">m</span></div></div>
 <div class="form-group"><label>初始軸功率 (P1)</label><div class="input-wrapper"><input type="number" id="pumpP1" value="" inputmode="decimal" step="any" oninput="calcPumpLaws()"><span class="unit">kW</span></div></div>
 
 <div class="result-box green">
-<div class="result-row"><span>預期流量 (Q2)：</span><span class="result-val highlight green-text" id="resPumpQ2">0.00 LPM</span></div>
-<div class="result-row"><span>預期揚程 (H2)：</span><span class="result-val highlight cyan-text" id="resPumpH2">0.00 m</span></div>
+<div class="result-row"><span>預期流量/風量 (Q2)：</span><span class="result-val highlight green-text" id="resPumpQ2">0.00 LPM</span></div>
+<div class="result-row"><span>預期揚程/風壓/靜壓 (H2)：</span><span class="result-val highlight cyan-text" id="resPumpH2">0.00 m</span></div>
 <div class="result-row"><span>預期軸功率 (P2)：</span><span class="result-val highlight orange-text" id="resPumpP2">0.00 kW</span></div>
-<div class="result-row"><span id="labelSaving">節能率：</span><span class="result-val green-text highlight" id="resPumpEnergySaving">0.0 %</span></div>
+<div class="result-row"><span id="labelSaving">節能率：</span><span class="result-val green-text highlight" id="resPumpEnergySaving"><span style="font-size:1.5em;">💰</span> 0.0 %</span></div>
 </div>
 </div>
 </div>
 
-<div id="tab5" class="tab-content">
+<div id="tab8" class="tab-content">
 <div class="section-card">
 <div class="section-title cyan">1. 冰水側輸入</div>
 <div class="grid-2">
@@ -444,128 +640,9 @@ margin:0 !important;
 </div>
 
 
-
-<div id="tab6" class="tab-content">
-<div class="section-card">
-<div class="section-title green">單位換算</div>
-
-<div class="form-group">
-<label>換算類別</label>
-<select id="unitCategory" onchange="switchUnitCategory()">
-<option value="air">空壓單位</option>
-<option value="hvac">空調單位</option>
-</select>
 </div>
-
-<div id="unitAirPanel">
-<div class="section-title cyan">空壓流量單位</div>
-<div class="form-group"><label>流量 m³/min</label><div class="input-wrapper"><input type="number" id="airM3MIN" value="" inputmode="decimal" step="any" oninput="syncAirUnit('m3min')"><span class="unit">m³/min</span></div></div>
-<div class="form-group"><label>流量 CMM</label><div class="input-wrapper"><input type="number" id="airCMM" value="" inputmode="decimal" step="any" oninput="syncAirUnit('cmm')"><span class="unit">CMM</span></div></div>
-<div class="form-group"><label>流量 CMH</label><div class="input-wrapper"><input type="number" id="airCMH" value="" inputmode="decimal" step="any" oninput="syncAirUnit('cmh')"><span class="unit">m³/h</span></div></div>
-<div class="form-group"><label>流量 CFM</label><div class="input-wrapper"><input type="number" id="airCFM" value="" inputmode="decimal" step="any" oninput="syncAirUnit('cfm')"><span class="unit">CFM</span></div></div>
-<hr>
-<div class="section-title cyan">空壓壓力單位</div>
-<div class="form-group"><label>壓力 bar</label><div class="input-wrapper"><input type="number" id="airBar" value="" inputmode="decimal" step="any" oninput="syncAirUnit('bar')"><span class="unit">bar</span></div></div>
-<div class="form-group"><label>壓力 kg/cm²</label><div class="input-wrapper"><input type="number" id="airKGCM2" value="" inputmode="decimal" step="any" oninput="syncAirUnit('kgcm2')"><span class="unit">kg/cm²</span></div></div>
-<div class="form-group"><label>壓力 kPa</label><div class="input-wrapper"><input type="number" id="airKPA" value="" inputmode="decimal" step="any" oninput="syncAirUnit('kpa')"><span class="unit">kPa</span></div></div>
-<div class="form-group"><label>壓力 MPa</label><div class="input-wrapper"><input type="number" id="airMPA" value="" inputmode="decimal" step="any" oninput="syncAirUnit('mpa')"><span class="unit">MPa</span></div></div>
-<div class="form-group"><label>壓力 psi</label><div class="input-wrapper"><input type="number" id="airPSI" value="" inputmode="decimal" step="any" oninput="syncAirUnit('psi')"><span class="unit">psi</span></div></div>
-<div class="form-group"><label>壓力 mmH₂O</label><div class="input-wrapper"><input type="number" id="airMMH2O" value="" inputmode="decimal" step="any" oninput="syncAirUnit('mmh2o')"><span class="unit">mmH₂O</span></div></div>
-<div class="form-group"><label>壓力 mmHg</label><div class="input-wrapper"><input type="number" id="airMMHG" value="" inputmode="decimal" step="any" oninput="syncAirUnit('mmhg')"><span class="unit">mmHg</span></div></div>
-<hr>
-<div class="section-title cyan">功率單位</div>
-<div class="form-group"><label>功率 kW</label><div class="input-wrapper"><input type="number" id="airKWUnit" value="" inputmode="decimal" step="any" oninput="syncAirUnit('kw')"><span class="unit">kW</span></div></div>
-<div class="form-group"><label>馬力 HP</label><div class="input-wrapper"><input type="number" id="airHPUnit" value="" inputmode="decimal" step="any" oninput="syncAirUnit('hp')"><span class="unit">HP</span></div></div>
-</div>
-
-<div id="unitHvacPanel" style="display:none;">
-<div class="section-title orange">空調單位</div>
-<div class="form-group"><label>冷凍噸 RT</label><div class="input-wrapper"><input type="number" id="hvacRT" value="" inputmode="decimal" step="any" oninput="syncHvacUnit('rt')"><span class="unit">RT</span></div></div>
-<div class="form-group"><label>冷量 kW</label><div class="input-wrapper"><input type="number" id="hvacKW" value="" inputmode="decimal" step="any" oninput="syncHvacUnit('kw')"><span class="unit">kW</span></div></div>
-<div class="form-group"><label>冷量 kcal/h</label><div class="input-wrapper"><input type="number" id="hvacKcal" value="" inputmode="decimal" step="any" oninput="syncHvacUnit('kcal')"><span class="unit">kcal/h</span></div></div>
-<hr>
-<div class="form-group"><label>水量 LPM</label><div class="input-wrapper"><input type="number" id="hvacLPM" value="" inputmode="decimal" step="any" oninput="syncHvacUnit('lpm')"><span class="unit">LPM</span></div></div>
-<div class="form-group"><label>水量 CMH</label><div class="input-wrapper"><input type="number" id="hvacCMH" value="" inputmode="decimal" step="any" oninput="syncHvacUnit('cmh')"><span class="unit">m³/h</span></div></div>
-</div>
-</div>
-</div>
-
-<div id="tab7" class="tab-content">
-<div class="section-card">
-<div class="section-title green">空壓節能壓力試算</div>
-<div class="pair-row">
-<div class="form-group"><label>原壓力</label><div class="input-wrapper"><input type="number" id="saveOldPressure" value="" inputmode="decimal" step="any" oninput="calcAirSaving()"><span class="unit">bar</span></div></div>
-<div class="form-group"><label>改善後壓力</label><div class="input-wrapper"><input type="number" id="saveNewPressure" value="" inputmode="decimal" step="any" oninput="calcAirSaving()"><span class="unit">bar</span></div></div>
-</div>
-<div class="form-group"><label>主機功率</label><div class="input-wrapper"><input type="number" id="saveKW" value="" inputmode="decimal" step="any" oninput="calcAirSaving()"><span class="unit">kW</span></div></div>
-<div class="form-group"><label>運轉時數</label><div class="input-wrapper"><input type="number" id="saveRunHours" value="" inputmode="decimal" step="any" oninput="calcAirSaving()"><span class="unit">hr/年</span></div></div>
-<div class="form-group"><label>負載時數</label><div class="input-wrapper"><input type="number" id="saveLoadHours" value="" inputmode="decimal" step="any" oninput="calcAirSaving()"><span class="unit">hr/年</span></div></div>
-<div class="form-group"><label>電價</label><div class="input-wrapper"><input type="number" id="saveElecPrice" value="" inputmode="decimal" step="any" oninput="calcAirSaving()"><span class="unit">元/kWh</span></div></div>
-<div class="result-box green">
-<div class="result-row"><span id="labelPressureDiff">壓力降低量：</span><span class="result-val cyan-text" id="resPressureDiff">0.0 bar</span></div>
-<div class="result-row"><span>負載率：</span><span class="result-val cyan-text" id="resLoadRate">0.0 %</span></div>
-<div class="result-row"><span id="labelSavingRate">節能率：</span><span class="result-val green-text highlight" id="resSavingRate">💰 0.0 %</span></div>
-<div class="result-row"><span id="labelSavingKWH">年節電：</span><span class="result-val green-text highlight" id="resSavingKWH">0 kWh</span></div>
-<div class="result-row"><span id="labelSavingCost">年節費：</span><span class="result-val orange-text highlight" id="resSavingCost">💰 0 元</span></div>
-<div class="result-row"><span id="labelSavingCO2">CO₂ 減量：</span><span class="result-val cyan-text highlight" id="resSavingCO2">0 kg/年</span></div>
-</div>
-</div>
-</div>
-
-<div id="tab8" class="tab-content">
-<div class="section-card">
-<div class="section-title red">空壓洩漏量計算</div>
-<div class="form-group">
-<label>估算方式</label>
-<select id="leakMethod" onchange="switchLeakMethod(); calcLeakAll();">
-<option value="hole">方法1：孔徑估算法</option>
-<option value="load">方法2：Load / Unload 法</option>
-<option value="tank">方法3：儲氣桶壓降法</option>
-</select>
-</div>
-<div id="leakMethodNote" class="result-box cyan"><div class="result-row"><span>適用條件：</span><span class="result-val cyan-text" id="resLeakMethodNote">🟢 可於生產中快速估算，精度較低</span></div></div>
-<div id="leakHolePanel">
-<div class="section-title cyan">方法1：孔徑估算法</div>
-<div class="result-box cyan"><div class="result-row"><span>現場條件：</span><span class="result-val cyan-text">🟢 可於正常生產中估算</span></div></div>
-<div class="form-group"><label>系統壓力</label><div class="input-wrapper"><input type="number" id="leakHolePressure" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">bar</span></div></div>
-<div class="form-group"><label>漏孔直徑</label><div class="input-wrapper"><input type="number" id="leakHoleDia" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">mm</span></div></div>
-</div>
-<div id="leakLoadPanel" style="display:none;">
-<div class="section-title cyan">方法2：Load / Unload 法</div>
-<div class="result-box orange"><div class="result-row"><span>現場條件：</span><span class="result-val orange-text">🟡 建議停產、夜間或低用氣時測試</span></div></div>
-<div class="form-group"><label>Load 秒數</label><div class="input-wrapper"><input type="number" id="leakLoadSec" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">sec</span></div></div>
-<div class="form-group"><label>Unload 秒數</label><div class="input-wrapper"><input type="number" id="leakUnloadSec" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">sec</span></div></div>
-</div>
-<div id="leakTankPanel" style="display:none;">
-<div class="section-title cyan">方法3：儲氣桶壓降法</div>
-<div class="result-box red"><div class="result-row"><span>現場條件：</span><span class="result-val red-text">🔴 必須停止所有用氣設備並隔離測試區域</span></div></div>
-<div class="form-group"><label>儲氣桶容量</label><div class="input-wrapper"><input type="number" id="leakTankVol" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">L</span></div></div>
-<div class="form-group"><label>已知附加容積</label><div class="input-wrapper"><input type="number" id="leakPipeVolManual" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">L</span></div></div>
-<div class="section-title cyan">管路容積估算</div>
-<div class="form-group"><label>管徑快速選擇</label><select id="leakPipeSizeSelect" onchange="selectLeakPipeSize()"><option value="">自訂 / 不選</option><option value="25.4">1&quot;</option><option value="31.75">1-1/4&quot;</option><option value="38.1">1-1/2&quot;</option><option value="50.8">2&quot;</option><option value="63.5">2-1/2&quot;</option><option value="76.2">3&quot;</option><option value="101.6">4&quot;</option><option value="127">5&quot;</option><option value="152.4">6&quot;</option><option value="203.2">8&quot;</option><option value="254">10&quot;</option><option value="304.8">12&quot;</option></select></div>
-<div class="pair-row">
-<div class="form-group"><label>管路內徑 mm</label><div class="input-wrapper"><input type="number" id="leakPipeIDMM" value="" inputmode="decimal" step="any" oninput="syncLeakPipeID('mm')"><span class="unit">mm</span></div></div>
-<div class="form-group"><label>管路內徑 inch</label><div class="input-wrapper"><input type="number" id="leakPipeIDInch" value="" inputmode="decimal" step="any" oninput="syncLeakPipeID('inch')"><span class="unit">吋</span></div></div>
-</div>
-<div class="form-group"><label>管路長度</label><div class="input-wrapper"><input type="number" id="leakPipeLength" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">m</span></div></div>
-<div class="result-box cyan"><div class="result-row"><span>管路自動估算容積：</span><span class="result-val cyan-text" id="resLeakPipeVolAuto">0 L</span></div><div class="result-row"><span>有效儲氣總容積：</span><span class="result-val cyan-text highlight" id="resLeakEffectiveVol">0 L</span></div><div class="result-row"><span>容積占比：</span><span class="result-val cyan-text" id="resLeakVolRatio">--</span></div></div>
-<div class="form-group"><label>起始壓力</label><div class="input-wrapper"><input type="number" id="leakP1" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">bar</span></div></div>
-<div class="form-group"><label>終止壓力</label><div class="input-wrapper"><input type="number" id="leakP2" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">bar</span></div></div>
-<div class="form-group"><label>壓降時間</label><div class="input-wrapper"><input type="number" id="leakTankSec" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">sec</span></div></div>
-</div>
-<hr>
-<div class="section-title orange">成本換算</div>
-<div class="pair-row"><div class="form-group"><label>總馬力</label><div class="input-wrapper"><input type="number" id="leakTotalHP" value="" inputmode="decimal" step="any" oninput="syncLeakPower('hp')"><span class="unit">HP</span></div></div><div class="form-group"><label>總功率</label><div class="input-wrapper"><input type="number" id="leakTotalKW" value="" inputmode="decimal" step="any" oninput="syncLeakPower('kw')"><span class="unit">kW</span></div></div></div>
-<div class="form-group"><label>總流量</label><div class="input-wrapper"><input type="number" id="leakTotalFlow" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">CMM</span></div></div>
-<div class="form-group"><label>運轉時數</label><div class="input-wrapper"><input type="number" id="leakRunHours" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">hr/年</span></div></div>
-<div class="form-group"><label>電價</label><div class="input-wrapper"><input type="number" id="leakElecPrice" value="" inputmode="decimal" step="any" oninput="calcLeakAll()"><span class="unit">元/kWh</span></div></div>
-<div class="result-box red"><div class="result-row"><span>推估洩漏量：</span><span class="result-val red-text highlight" id="resLeakCMM">0.000 CMM</span></div><div class="result-row"><span>洩漏量：</span><span class="result-val orange-text" id="resLeakCFM">0.00 CFM</span></div><div class="result-row"><span>漏氣率：</span><span class="result-val cyan-text" id="resLeakRate">0.0 %</span></div><div class="result-row"><span>系統比功率：</span><span class="result-val orange-text" id="resLeakSpecificPower">0.000 kW/CMM</span></div><div class="result-row"><span>年損失電量：</span><span class="result-val red-text highlight" id="resLeakKWH">0 kWh</span></div><div class="result-row"><span>年損失電費：</span><span class="result-val red-text highlight" id="resLeakCost">💸 0 元</span></div></div>
-</div>
-</div>
-
-</div>
-
 <script>
+
 // ══════════════════════════════════════════
 //  Supabase 金鑰綁定系統（只控制解鎖，不修改公式區）
 // ══════════════════════════════════════════
@@ -589,7 +666,7 @@ async function supabaseFetch(path, method='GET', body=null) {
             'apikey': SUPABASE_KEY,
             'Authorization': 'Bearer ' + SUPABASE_KEY,
             'Content-Type': 'application/json',
-            'Prefer': method==='PATCH' ? 'return=representation' : ''
+            'Prefer': method === 'PATCH' ? 'return=representation' : ''
         }
     };
     if (body) opts.body = JSON.stringify(body);
@@ -601,30 +678,55 @@ async function verifyKey() {
     const input = document.getElementById('key-input');
     const msg = document.getElementById('auth-msg');
     const btn = document.getElementById('unlock-btn');
-    const keyVal = input.value.trim().toUpperCase();
-    if (!keyVal) { msg.textContent = '⚠️ 請輸入金鑰'; return; }
-    btn.textContent = '驗證中...'; btn.disabled = true; msg.textContent = '';
+    const keyVal = (input.value || '').trim().toUpperCase();
+
+    if (!keyVal) {
+        msg.textContent = '⚠️ 請輸入金鑰';
+        return;
+    }
+
+    btn.textContent = '驗證中...';
+    btn.disabled = true;
+    msg.textContent = '';
+
     try {
         const deviceId = getDeviceId();
         const data = await supabaseFetch(`keys?key=eq.${encodeURIComponent(keyVal)}&select=*`);
+
         if (!data || data.length === 0) {
             msg.textContent = '❌ 金鑰不存在';
-            btn.textContent = '驗證並解鎖'; btn.disabled = false; return;
+            btn.textContent = '驗證並解鎖';
+            btn.disabled = false;
+            return;
         }
+
         const record = data[0];
-        if (!record.bound || !record.device_id) {
-            await supabaseFetch(`keys?key=eq.${encodeURIComponent(keyVal)}`, 'PATCH', { device_id: deviceId, bound: true });
+        const isBound = record.bound === true || record.bound === 'true';
+        const hasDevice = !!record.device_id;
+
+        if (!isBound || !hasDevice) {
+            await supabaseFetch(`keys?key=eq.${encodeURIComponent(keyVal)}`, 'PATCH', {
+                device_id: deviceId,
+                bound: true
+            });
             localStorage.setItem(LOCAL_KEY, keyVal);
-            showAuthSuccess(); return;
+            showAuthSuccess();
+            return;
         }
+
         if (record.device_id === deviceId) {
-            localStorage.setItem(LOCAL_KEY, keyVal); showAuthSuccess(); return;
+            localStorage.setItem(LOCAL_KEY, keyVal);
+            showAuthSuccess();
+            return;
         }
+
         msg.textContent = '❌ 此金鑰已綁定其他裝置，請向 Hank 索取新金鑰';
-        btn.textContent = '驗證並解鎖'; btn.disabled = false;
+        btn.textContent = '驗證並解鎖';
+        btn.disabled = false;
     } catch(e) {
         msg.textContent = '⚠️ 網路錯誤，請重試';
-        btn.textContent = '驗證並解鎖'; btn.disabled = false;
+        btn.textContent = '驗證並解鎖';
+        btn.disabled = false;
     }
 }
 
@@ -636,7 +738,9 @@ function unlockMainApp() {
 }
 
 function showAuthSuccess() {
-    document.getElementById('auth-box').innerHTML = `
+    const box = document.getElementById('auth-box');
+    if (!box) return unlockMainApp();
+    box.innerHTML = `
         <div style="text-align:center;">
             <div style="font-size:64px;margin-bottom:16px;">✅</div>
             <h2 style="color:#34c759;font-size:20px;margin-bottom:8px;">驗證成功！</h2>
@@ -648,13 +752,18 @@ function showAuthSuccess() {
 async function checkSavedKey() {
     const savedKey = localStorage.getItem(LOCAL_KEY);
     if (!savedKey) return;
+
     try {
         const deviceId = getDeviceId();
         const data = await supabaseFetch(`keys?key=eq.${encodeURIComponent(savedKey)}&select=*`);
-        if (data && data.length > 0 && data[0].device_id === deviceId && data[0].bound) {
+        const record = data && data.length > 0 ? data[0] : null;
+        const isBound = record && (record.bound === true || record.bound === 'true');
+
+        if (record && record.device_id === deviceId && isBound) {
             unlockMainApp();
         }
     } catch(e) {
+        // 離線或 Supabase 暫時不可用時，已授權裝置先放行
         unlockMainApp();
     }
 }
@@ -665,12 +774,12 @@ window.addEventListener('load', () => {
         keyInput.addEventListener('keydown', e => {
             if (e.key === 'Enter') verifyKey();
         });
+        keyInput.focus();
     }
     checkSavedKey();
 });
-</script>
 
-<script>
+
 const cableDatabase = {
 "XLPE": {
 "3C": {
@@ -744,13 +853,10 @@ const cableDatabase = {
 
 const nfbStandardSizes = [15, 20, 30, 40, 50, 60, 75, 100, 125, 150, 175, 225, 250, 300, 400, 500, 600, 800, 1000, 1200];
 
-
 function getNumber(id) { const el = document.getElementById(id); return el ? (parseFloat(el.value) || 0) : 0; }
 function setText(id, text) { const el = document.getElementById(id); if (el) el.innerHTML = text; }
 
 let unitSyncLock = false;
-let leakPowerSyncLock = false;
-let leakPipeSyncLock = false;
 
 function setVal(id, value, decimals) {
   const el = document.getElementById(id);
@@ -775,9 +881,12 @@ function switchUnitCategory() {
   }
 }
 
+
 function syncAirUnit(type) {
   if (unitSyncLock) return;
   unitSyncLock = true;
+
+  // 空壓流量基準：CMM = m³/min
   let cmm = 0;
   if (type === 'm3min') {
     cmm = getNumber('airM3MIN');
@@ -803,6 +912,7 @@ function syncAirUnit(type) {
     setVal('airCMH', cmm > 0 ? cmm * 60 : '', 2);
   }
 
+  // 空壓壓力基準：bar
   let bar = 0;
   if (type === 'bar') {
     bar = getNumber('airBar');
@@ -828,6 +938,7 @@ function syncAirUnit(type) {
     setVal('airBar', bar > 0 ? bar : '', 4);
   } else if (type === 'mmhg') {
     const mmhg = getNumber('airMMHG');
+    // 1 atm = 1.01325 bar = 760 mmHg
     bar = mmhg > 0 ? (mmhg / 760) * 1.01325 : 0;
     setVal('airBar', bar > 0 ? bar : '', 4);
   }
@@ -841,6 +952,7 @@ function syncAirUnit(type) {
     if (type !== 'mmhg') setVal('airMMHG', bar > 0 ? (bar / 1.01325) * 760 : '', 1);
   }
 
+  // 功率
   if (type === 'kw') {
     const kw = getNumber('airKWUnit');
     setVal('airHPUnit', kw > 0 ? kw / 0.746 : '', 2);
@@ -848,12 +960,14 @@ function syncAirUnit(type) {
     const hp = getNumber('airHPUnit');
     setVal('airKWUnit', hp > 0 ? hp * 0.746 : '', 2);
   }
+
   unitSyncLock = false;
 }
 
 function syncHvacUnit(type) {
   if (unitSyncLock) return;
   unitSyncLock = true;
+
   if (type === 'rt') {
     const rt = getNumber('hvacRT');
     setVal('hvacKW', rt > 0 ? rt * 3.517 : '', 2);
@@ -875,12 +989,21 @@ function syncHvacUnit(type) {
     const cmh = getNumber('hvacCMH');
     setVal('hvacLPM', cmh > 0 ? cmh / 0.06 : '', 0);
   }
+
   unitSyncLock = false;
 }
+
+
+
+
+
+let leakPowerSyncLock = false;
+let leakPipeSyncLock = false;
 
 function syncLeakPower(type) {
   if (leakPowerSyncLock) return;
   leakPowerSyncLock = true;
+
   if (type === 'hp') {
     const hp = getNumber('leakTotalHP');
     setVal('leakTotalKW', hp > 0 ? hp * 0.746 : '', 2);
@@ -888,6 +1011,7 @@ function syncLeakPower(type) {
     const kw = getNumber('leakTotalKW');
     setVal('leakTotalHP', kw > 0 ? kw / 0.746 : '', 2);
   }
+
   leakPowerSyncLock = false;
   calcLeakAll();
 }
@@ -905,6 +1029,7 @@ function selectLeakPipeSize() {
 function syncLeakPipeID(type) {
   if (leakPipeSyncLock) return;
   leakPipeSyncLock = true;
+
   if (type === 'mm') {
     const mm = getNumber('leakPipeIDMM');
     setVal('leakPipeIDInch', mm > 0 ? mm / 25.4 : '', 3);
@@ -912,20 +1037,31 @@ function syncLeakPipeID(type) {
     const inch = getNumber('leakPipeIDInch');
     setVal('leakPipeIDMM', inch > 0 ? inch * 25.4 : '', 2);
   }
+
   const sel = document.getElementById('leakPipeSizeSelect');
   if (sel) sel.value = '';
+
   leakPipeSyncLock = false;
   calcLeakAll();
 }
 
 function switchLeakMethod() {
   const method = document.getElementById('leakMethod').value;
-  document.getElementById('leakHolePanel').style.display = method === 'hole' ? 'block' : 'none';
-  document.getElementById('leakLoadPanel').style.display = method === 'load' ? 'block' : 'none';
-  document.getElementById('leakTankPanel').style.display = method === 'tank' ? 'block' : 'none';
-  if (method === 'hole') setText('resLeakMethodNote', '🟢 可於生產中快速估算，精度較低');
-  else if (method === 'load') setText('resLeakMethodNote', '🟡 建議停產、夜間或低用氣時測試，否則包含實際用氣量');
-  else setText('resLeakMethodNote', '🔴 必須停止所有用氣設備並隔離測試區域；容積需含管路');
+  const holePanel = document.getElementById('leakHolePanel');
+  const loadPanel = document.getElementById('leakLoadPanel');
+  const tankPanel = document.getElementById('leakTankPanel');
+
+  holePanel.style.display = method === 'hole' ? 'block' : 'none';
+  loadPanel.style.display = method === 'load' ? 'block' : 'none';
+  tankPanel.style.display = method === 'tank' ? 'block' : 'none';
+
+  if (method === 'hole') {
+    setText('resLeakMethodNote', '🟢 可於生產中快速估算，精度較低');
+  } else if (method === 'load') {
+    setText('resLeakMethodNote', '🟡 建議停產、夜間或低用氣時測試，否則包含實際用氣量');
+  } else {
+    setText('resLeakMethodNote', '🔴 必須停止所有用氣設備並隔離測試區域；容積需含管路');
+  }
 }
 
 function calcLeakPipeAutoVolume() {
@@ -934,19 +1070,24 @@ function calcLeakPipeAutoVolume() {
   if (idMM <= 0 || lengthM <= 0) return 0;
   const radiusM = (idMM / 1000) / 2;
   const volumeM3 = Math.PI * Math.pow(radiusM, 2) * lengthM;
-  return volumeM3 * 1000;
+  return volumeM3 * 1000; // L
 }
 
 function updateLeakVolumeResults(tankL, addL, pipeAutoL) {
   const effectiveL = tankL + addL + pipeAutoL;
   setText('resLeakPipeVolAuto', pipeAutoL.toFixed(1) + ' L');
   setText('resLeakEffectiveVol', effectiveL.toFixed(1) + ' L');
+
   if (effectiveL > 0) {
     const tankPct = tankL / effectiveL * 100;
     const pipePct = pipeAutoL / effectiveL * 100;
     const addPct = addL / effectiveL * 100;
-    setText('resLeakVolRatio', '桶 ' + tankPct.toFixed(0) + '% / 管 ' + pipePct.toFixed(0) + '% / 附加 ' + addPct.toFixed(0) + '%');
-  } else setText('resLeakVolRatio', '--');
+    setText('resLeakVolRatio',
+      '桶 ' + tankPct.toFixed(0) + '% / 管 ' + pipePct.toFixed(0) + '% / 附加 ' + addPct.toFixed(0) + '%'
+    );
+  } else {
+    setText('resLeakVolRatio', '--');
+  }
   return effectiveL;
 }
 
@@ -954,16 +1095,24 @@ function calcLeakAll() {
   const methodEl = document.getElementById('leakMethod');
   const method = methodEl ? methodEl.value : 'hole';
   let leakCMM = 0;
+  let loadUnloadRate = 0;
+
   if (method === 'hole') {
     const pressure = getNumber('leakHolePressure');
     const dia = getNumber('leakHoleDia');
-    if (pressure > 0 && dia > 0) leakCMM = 0.10 * Math.pow(dia, 2) * ((pressure + 1) / 8);
+    // 方法1 孔徑估算法：以 7 bar 常用表為基準，1 mm 約 0.10 CMM。
+    if (pressure > 0 && dia > 0) {
+      leakCMM = 0.10 * Math.pow(dia, 2) * ((pressure + 1) / 8);
+    }
   } else if (method === 'load') {
     const totalFlow = getNumber('leakTotalFlow');
     const loadSec = getNumber('leakLoadSec');
     const unloadSec = getNumber('leakUnloadSec');
     const cycle = loadSec + unloadSec;
-    if (totalFlow > 0 && loadSec > 0 && cycle > 0) leakCMM = totalFlow * (loadSec / cycle);
+    if (totalFlow > 0 && loadSec > 0 && cycle > 0) {
+      loadUnloadRate = loadSec / cycle;
+      leakCMM = totalFlow * loadUnloadRate;
+    }
   } else if (method === 'tank') {
     const tankL = getNumber('leakTankVol');
     const addL = getNumber('leakPipeVolManual');
@@ -972,22 +1121,31 @@ function calcLeakAll() {
     const p1 = getNumber('leakP1');
     const p2 = getNumber('leakP2');
     const sec = getNumber('leakTankSec');
-    if (effectiveL > 0 && p1 > p2 && sec > 0) leakCMM = (effectiveL / 1000) * (p1 - p2) / (sec / 60);
+
+    if (effectiveL > 0 && p1 > p2 && sec > 0) {
+      const effectiveM3 = effectiveL / 1000;
+      const min = sec / 60;
+      leakCMM = effectiveM3 * (p1 - p2) / min;
+    }
   }
+
   if (method !== 'tank') {
     setText('resLeakPipeVolAuto', '0 L');
     setText('resLeakEffectiveVol', '0 L');
     setText('resLeakVolRatio', '--');
   }
+
   const cfm = leakCMM * 35.3147;
   const totalKW = getNumber('leakTotalKW');
   const totalFlow = getNumber('leakTotalFlow');
   const runHours = getNumber('leakRunHours');
   const price = getNumber('leakElecPrice');
+
   const specificPower = totalFlow > 0 ? totalKW / totalFlow : 0;
-  const leakRate = totalFlow > 0 ? leakCMM / totalFlow * 100 : 0;
+  const leakRate = totalFlow > 0 ? (leakCMM / totalFlow) * 100 : 0;
   const lossKWH = leakCMM * specificPower * runHours;
   const lossCost = lossKWH * price;
+
   setText('resLeakCMM', leakCMM.toFixed(3) + ' CMM');
   setText('resLeakCFM', cfm.toFixed(2) + ' CFM');
   setText('resLeakRate', totalFlow > 0 ? leakRate.toFixed(1) + ' %' : '--');
@@ -995,6 +1153,7 @@ function calcLeakAll() {
   setText('resLeakKWH', Math.round(lossKWH).toLocaleString() + ' kWh');
   setText('resLeakCost', '💸 ' + Math.round(lossCost).toLocaleString() + ' 元');
 }
+
 
 function switchTab(index) {
   const tabs = document.querySelectorAll('.tab-btn');
@@ -1086,6 +1245,7 @@ function calcAir() {
   }
 }
 
+
 function calcAirSaving() {
   const oldP = getNumber('saveOldPressure');
   const newP = getNumber('saveNewPressure');
@@ -1093,22 +1253,27 @@ function calcAirSaving() {
   const runHours = getNumber('saveRunHours');
   const loadHours = getNumber('saveLoadHours');
   const price = getNumber('saveElecPrice');
-  const diff = oldP - newP;
+
+  const diff = oldP - newP; // 正數=降壓節能，負數=升壓耗能增加
   const absDiff = Math.abs(diff);
   const rate = absDiff * 7;
-  const loadRate = runHours > 0 ? loadHours / runHours * 100 : 0;
+  const loadRate = runHours > 0 ? (loadHours / runHours) * 100 : 0;
   const kwh = kw * loadHours * (rate / 100);
   const cost = kwh * price;
   const co2 = kwh * 0.494;
+
   const rateEl = document.getElementById('resSavingRate');
   const kwhEl = document.getElementById('resSavingKWH');
   const costEl = document.getElementById('resSavingCost');
   const co2El = document.getElementById('resSavingCO2');
+
   [rateEl, kwhEl, costEl, co2El].forEach(el => {
     if (!el) return;
     el.classList.remove('green-text', 'red-text', 'orange-text', 'cyan-text');
   });
+
   setText('resLoadRate', loadRate.toFixed(1) + ' %');
+
   if (diff >= 0) {
     setText('labelPressureDiff', '壓力降低量：');
     setText('resPressureDiff', absDiff.toFixed(2) + ' bar');
@@ -1116,10 +1281,12 @@ function calcAirSaving() {
     setText('labelSavingKWH', '年節電：');
     setText('labelSavingCost', '年節費：');
     setText('labelSavingCO2', 'CO₂ 減量：');
+
     if (rateEl) rateEl.classList.add('green-text');
     if (kwhEl) kwhEl.classList.add('green-text');
     if (costEl) costEl.classList.add('orange-text');
     if (co2El) co2El.classList.add('cyan-text');
+
     setText('resSavingRate', '💰 ' + rate.toFixed(1) + ' %');
     setText('resSavingKWH', Math.round(kwh).toLocaleString() + ' kWh');
     setText('resSavingCost', '💰 ' + Math.round(cost).toLocaleString() + ' 元');
@@ -1131,10 +1298,12 @@ function calcAirSaving() {
     setText('labelSavingKWH', '年增加耗電：');
     setText('labelSavingCost', '年增加電費：');
     setText('labelSavingCO2', 'CO₂ 增加量：');
+
     if (rateEl) rateEl.classList.add('red-text');
     if (kwhEl) kwhEl.classList.add('red-text');
     if (costEl) costEl.classList.add('red-text');
     if (co2El) co2El.classList.add('red-text');
+
     setText('resSavingRate', '💸 ' + rate.toFixed(1) + ' %');
     setText('resSavingKWH', Math.round(kwh).toLocaleString() + ' kWh');
     setText('resSavingCost', '💸 ' + Math.round(cost).toLocaleString() + ' 元');
@@ -1142,7 +1311,7 @@ function calcAirSaving() {
   }
 }
 
-// 3. 泵浦相似定律
+// 3. 泵浦/風扇相似定律
 function switchPumpMode() {
   const mode = document.getElementById('pumpMode').value;
   const speedGroup = document.getElementById('input-speed-group');
@@ -1186,7 +1355,10 @@ function calcPumpLaws() {
     setText('resPumpH2', '0.00 m');
     setText('resPumpP2', '0.00 kW');
     document.getElementById('labelSaving').innerText = '節能率：';
-    setText('resPumpEnergySaving', '0.0 %');
+    const savingEl = document.getElementById('resPumpEnergySaving');
+    savingEl.classList.remove('red-text');
+    savingEl.classList.add('green-text');
+    setText('resPumpEnergySaving', '<span style="font-size:1.5em;">💰</span> 0.0 %');
     return;
   }
 
@@ -1198,22 +1370,32 @@ function calcPumpLaws() {
   setText('resPumpH2', h2.toFixed(2) + ' m');
   setText('resPumpP2', p2.toFixed(2) + ' kW');
 
+  const savingEl = document.getElementById('resPumpEnergySaving');
+
   if (p1 > 0) {
     if (p2 < p1) {
       const saving = ((p1 - p2) / p1) * 100;
       document.getElementById('labelSaving').innerText = '節能率：';
-      setText('resPumpEnergySaving', saving.toFixed(1) + ' %');
+      savingEl.classList.remove('red-text');
+      savingEl.classList.add('green-text');
+      setText('resPumpEnergySaving', '<span style="font-size:1.5em;">💰</span> ' + saving.toFixed(1) + ' %');
     } else if (p2 > p1) {
       const increase = ((p2 - p1) / p1) * 100;
       document.getElementById('labelSaving').innerText = '耗能增加：';
-      setText('resPumpEnergySaving', increase.toFixed(1) + ' %');
+      savingEl.classList.remove('green-text');
+      savingEl.classList.add('red-text');
+      setText('resPumpEnergySaving', '<span style="font-size:1.5em;">💸</span> ' + increase.toFixed(1) + ' %');
     } else {
       document.getElementById('labelSaving').innerText = '節能率：';
-      setText('resPumpEnergySaving', '0.0 %');
+      savingEl.classList.remove('red-text');
+      savingEl.classList.add('green-text');
+      setText('resPumpEnergySaving', '<span style="font-size:1.5em;">💰</span> 0.0 %');
     }
   } else {
     document.getElementById('labelSaving').innerText = '節能率：';
-    setText('resPumpEnergySaving', '0.0 %');
+    savingEl.classList.remove('red-text');
+    savingEl.classList.add('green-text');
+    setText('resPumpEnergySaving', '<span style="font-size:1.5em;">💰</span> 0.0 %');
   }
 }
 
@@ -1262,6 +1444,7 @@ function calculateChillerAll() {
     setText('f4_ratio', ratio.toFixed(2)); setText('f5_hbErr', err.toFixed(2) + ' %');
   }
 }
+
 
 function extractCableSizeMM2(sizeText) {
   if (!sizeText) return 0;
