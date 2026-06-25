@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>現場工程計算工具 v20260611-ice-dt-loss</title>
+<title>現場工程計算工具 v20260625-ice-dt-loss</title>
 <style>
 
 :root{
@@ -808,33 +807,24 @@ margin:0 !important;
 
 <script>
 // ══════════════════════════════════════════
-//  Supabase 金鑰綁定系統（只控制解鎖，不修改公式區）
+//  Google Apps Script 金鑰綁定系統（只控制解鎖，不修改公式區）
 // ══════════════════════════════════════════
-const SUPABASE_URL = 'https://wnvawhxjxwkamemgljyg.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_kmjybpRUDuSWn02tf2uaug_iPwHk16o';
+//  ★ 部署 Apps Script Web App 後，把網址貼到下方 GAS_URL
+const GAS_URL   = 'https://script.google.com/macros/s/AKfycbzDC8m0siTHYYlGsQ1YrndyNJlEKGWJZhuQA5C7oVO52S04BmiNshBbi2G9Vt8bUFrN/exec';
 const LOCAL_KEY = 'hank_device_key';
 
 function getDeviceId() {
     let id = localStorage.getItem('hank_device_id');
     if (!id) {
-        id = crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36));
+        id = crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2));
         localStorage.setItem('hank_device_id', id);
     }
     return id;
 }
 
-async function supabaseFetch(path, method='GET', body=null) {
-    const opts = {
-        method,
-        headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
-            'Content-Type': 'application/json',
-            'Prefer': method==='PATCH' ? 'return=representation' : ''
-        }
-    };
-    if (body) opts.body = JSON.stringify(body);
-    const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
+async function gasFetch(action, key, device) {
+    const url = `${GAS_URL}?action=${action}&key=${encodeURIComponent(key)}&device=${encodeURIComponent(device)}`;
+    const res = await fetch(url);
     return res.json();
 }
 
@@ -847,22 +837,19 @@ async function verifyKey() {
     btn.textContent = '驗證中...'; btn.disabled = true; msg.textContent = '';
     try {
         const deviceId = getDeviceId();
-        const data = await supabaseFetch(`keys?key=eq.${encodeURIComponent(keyVal)}&select=*`);
-        if (!data || data.length === 0) {
-            msg.textContent = '❌ 金鑰不存在';
-            btn.textContent = '驗證並解鎖'; btn.disabled = false; return;
-        }
-        const record = data[0];
-        if (!record.bound || !record.device_id) {
-            await supabaseFetch(`keys?key=eq.${encodeURIComponent(keyVal)}`, 'PATCH', { device_id: deviceId, bound: true });
+        const data = await gasFetch('verify', keyVal, deviceId);
+        if (data.success) {
             localStorage.setItem(LOCAL_KEY, keyVal);
-            showAuthSuccess(); return;
+            showAuthSuccess();
+        } else {
+            const errMap = {
+                key_not_found   : '❌ 金鑰不存在',
+                device_mismatch : '❌ 此金鑰已綁定其他裝置，請向 Hank 索取新金鑰',
+                missing_params  : '⚠️ 參數錯誤，請重試',
+            };
+            msg.textContent = errMap[data.error] || '❌ 驗證失敗：' + data.error;
+            btn.textContent = '驗證並解鎖'; btn.disabled = false;
         }
-        if (record.device_id === deviceId) {
-            localStorage.setItem(LOCAL_KEY, keyVal); showAuthSuccess(); return;
-        }
-        msg.textContent = '❌ 此金鑰已綁定其他裝置，請向 Hank 索取新金鑰';
-        btn.textContent = '驗證並解鎖'; btn.disabled = false;
     } catch(e) {
         msg.textContent = '⚠️ 網路錯誤，請重試';
         btn.textContent = '驗證並解鎖'; btn.disabled = false;
@@ -891,8 +878,8 @@ async function checkSavedKey() {
     if (!savedKey) return;
     try {
         const deviceId = getDeviceId();
-        const data = await supabaseFetch(`keys?key=eq.${encodeURIComponent(savedKey)}&select=*`);
-        if (data && data.length > 0 && data[0].device_id === deviceId && data[0].bound) {
+        const data = await gasFetch('verify', savedKey, deviceId);
+        if (data.success) {
             unlockMainApp();
         }
     } catch(e) {
